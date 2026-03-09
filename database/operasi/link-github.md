@@ -1,1 +1,1 @@
-[[[https://github.com/mbadrudin170-jpg/wifi-v3/blob/14ee4f94c985730610ac5ac10d867f7964200a27/database/operasi/transaksi-operasi.ts](https://github.com/mbadrudin170-jpg/wifi-v3/new/main/database/operasi)](https://github.com/mbadrudin170-jpg/wifi-v3/new/main/database/operasi)](https://github.com/mbadrudin170-jpg/wifi-v3/new/main/database/operasi)
+https://github.com/mbadrudin170-jpg/wifi-v3/edit/main/database/operasi/link-github.md
