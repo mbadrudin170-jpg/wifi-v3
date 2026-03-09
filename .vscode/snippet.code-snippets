@@ -1,0 +1,9 @@
+{
+	"File Path Comment": {
+		"prefix": "path",
+		"body": [
+			"// Path: $TM_FILEPATH"
+		],
+		"description": "Insert current file path as a comment"
+	}
+}

@@ -1,98 +1,159 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// path: app/(tabs)/index.tsx
+// File Screen Utama (Dashboard) untuk menampilkan daftar pelanggan aktif.
+// Perubahan: Menggunakan useSQLiteContext untuk menyuntikkan db ke fungsi operasi.
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import {
+  operasiPelangganAktif,
+  type PelangganAktifDetail,
+} from '@/database/operasi/pelanggan-aktif-operasi';
+// import { migrateDbIfNeeded } from '@/database/sqlite'; // Hapus ini, tidak butuh di Screen
+import { getStatusPelanggan } from '@/hooks/status-pelanggan';
+import { formatTanggalAngka } from '@/utils/format/format-tanggal';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite'; // Impor Hook Context
+import { useCallback, useEffect, useState } from 'react'; // Tambah useCallback untuk performa
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen() {
+const RenderItemPelanggan = ({
+  item,
+  onNavigate,
+}: {
+  item: PelangganAktifDetail;
+  onNavigate: (id: number) => void;
+}) => {
+  const statusInfo = getStatusPelanggan(item.tanggal_berakhir);
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <Pressable style={Styles.itemContainer} onPress={() => onNavigate(item.id)}>
+      <View style={Styles.itemDetailContainer}>
+        <Text style={Styles.itemNama}>{item.nama}</Text>
+        <Text style={Styles.tanggalBerakhir}>{formatTanggalAngka(item.tanggal_berakhir)}</Text>
+      </View>
+      <View style={Styles.itemAksiContainer}>
+        <Text style={{ color: statusInfo.warna, fontWeight: 'bold' }}>{statusInfo.statusTeks}</Text>
+        <Text style={{ fontSize: 12 }}>{statusInfo.detailTeks}</Text>
+        <Text style={{ fontSize: 12, color: '#666' }}>{item.nama_paket}</Text>
+      </View>
+    </Pressable>
+  );
+};
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+export default function Home() {
+  const router = useRouter();
+  const db = useSQLiteContext(); // Ambil instance database yang sudah dimigrasi oleh Provider
+  const [totalAktif, setTotalAktif] = useState(0);
+  const [pelangganList, setPelangganList] = useState<PelangganAktifDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+  // Fungsi muatData dipisahkan agar bisa dipanggil ulang (refresh)
+  const muatData = useCallback(async () => {
+    try {
+      setLoading(true);
+      // SUNTIKKAN 'db' ke dalam operasi, bukan fungsi migrasi
+      const operasi = operasiPelangganAktif(db);
+
+      const [total, list] = await Promise.all([
+        operasi.hitungTotalPelangganAktif(),
+        operasi.ambilSemuaPelangganAktifDetail(),
+      ]);
+
+      setTotalAktif(total);
+      setPelangganList(list);
+    } catch (error) {
+      console.error('Gagal mengambil data pelanggan:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [db]);
+
+  useEffect(() => {
+    muatData();
+  }, [muatData]);
+
+  const handleNavigasiNavigasi = (id: number) => {
+    router.push(`/detail/pelanggan-aktif/${id}`);
+  };
+
+  return (
+    <SafeAreaView style={Styles.container}>
+      {/* Header */}
+      <View style={Styles.header}>
+        <View style={Styles.judul}>
+          <Text style={Styles.teksJudul}>Dashboard</Text>
+          <Text style={Styles.teksSubjudul}>Pelanggan Aktif: {totalAktif}</Text>
+        </View>
+        <View style={Styles.containerTombolHeader}>
+          <Pressable style={Styles.tombolHeader}>
+            <MaterialIcons name='add-circle' size={32} color='#2E7D32' />
+          </Pressable>
+          <Pressable style={Styles.tombolHeader} onPress={muatData}>
+            <MaterialIcons name='refresh' size={32} color='#0277BD' />
+          </Pressable>
+        </View>
+      </View>
+
+      {loading ? (
+        <View style={Styles.emptyContainer}>
+          <ActivityIndicator size='large' color='#2E7D32' />
+          <Text>Mengambil Data Keuangan...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={pelangganList}
+          renderItem={({ item }) => (
+            <RenderItemPelanggan item={item} onNavigate={handleNavigasiNavigasi} />
+          )}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={Styles.listContentContainer}
+          ListHeaderComponent={() => <Text style={Styles.listHeader}>Daftar Pelanggan</Text>}
+          ListEmptyComponent={() => (
+            <View style={Styles.emptyContainer}>
+              <MaterialIcons name='info-outline' size={48} color='#B0BEC5' />
+              <Text style={Styles.emptyText}>Belum ada pelanggan aktif.</Text>
+            </View>
+          )}
+        />
+      )}
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
+const Styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f4f5f7' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  judul: { flexDirection: 'column' },
+  teksJudul: { fontSize: 26, fontWeight: 'bold', color: '#1a1a1a' },
+  teksSubjudul: { fontSize: 16, color: '#666666', marginTop: 4 },
+  containerTombolHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  tombolHeader: { padding: 6 },
+  listContentContainer: { paddingHorizontal: 20, paddingVertical: 15 },
+  listHeader: { fontSize: 18, fontWeight: 'bold', color: '#37474F', marginBottom: 15 },
+  itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  itemDetailContainer: { flex: 1 },
+  itemNama: { fontSize: 16, fontWeight: 'bold', color: '#263238' },
+  tanggalBerakhir: { fontSize: 13, color: '#D32F2F', marginTop: 4 },
+  itemAksiContainer: { alignItems: 'flex-end', gap: 2 },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100 },
+  emptyText: { marginTop: 10, fontSize: 16, color: '#78909C' },
 });
