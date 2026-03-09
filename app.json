@@ -19,7 +19,6 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
@@ -38,7 +37,10 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
