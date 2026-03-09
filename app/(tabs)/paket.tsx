@@ -7,7 +7,7 @@ import { operasiPaket, Paket } from '@/database/operasi/paket-operasi';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -45,22 +45,31 @@ export default function HalamanPaket() {
   const [totalPaket, setTotalPaket] = useState(0);
   const [daftarPaket, setDaftarPaket] = useState<Paket[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
   const db = useSQLiteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const muatData = useCallback(async () => {
     try {
-      setLoading(true);
+      if (isMountedRef.current) setLoading(true);
       const repo = operasiPaket(db);
 
       // Mengambil data secara paralel agar lebih cepat di Poco C40/Chromebook
       const [paket, jumlah] = await Promise.all([repo.ambilSemuaPaket(), repo.hitungTotalPaket()]);
 
+      if (!isMountedRef.current) return;
       setDaftarPaket(paket);
       setTotalPaket(jumlah);
     } catch (error) {
       console.error('Gagal mengambil data paket:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   }, [db]);
 

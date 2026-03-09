@@ -9,7 +9,7 @@ import { formatTanggal } from '@/utils/format/format-tanggal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -27,9 +27,16 @@ export default function TransaksiScreen() {
   const [transaksi, setTransaksi] = useState<TransaksiLengkap[]>([]);
   const [totalTransaksi, setTotalTransaksi] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const muatData = useCallback(async () => {
-    if (transaksi.length === 0) setIsLoading(true);
+    if (transaksi.length === 0 && isMountedRef.current) setIsLoading(true);
 
     try {
       const [data, total] = await Promise.all([
@@ -37,12 +44,13 @@ export default function TransaksiScreen() {
         operasiTransaksi.hitungTotalTransaksi(db),
       ]);
 
+      if (!isMountedRef.current) return;
       setTransaksi(data || []);
       setTotalTransaksi(total);
     } catch (error) {
       console.error('Gagal memuat transaksi:', error);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) setIsLoading(false);
     }
   }, [db, transaksi.length]);
 

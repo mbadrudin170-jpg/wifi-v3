@@ -32,17 +32,23 @@ export default function DetailPelangganAktif() {
 
   useEffect(() => {
     if (!id) return;
+    let isCancelled = false;
+
     const loadData = async () => {
       try {
         const data = await operasiPelangganAktif(db).ambilDetailPelangganAktifById(Number(id));
-        setPelanggan(data);
+        if (!isCancelled) setPelanggan(data);
       } catch (error) {
         console.error('Gagal mengambil detail pelanggan:', error);
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) setIsLoading(false);
       }
     };
     loadData();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [id, db]);
 
   if (isLoading) {

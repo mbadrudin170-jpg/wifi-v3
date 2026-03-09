@@ -5,26 +5,25 @@ import * as SQLite from 'expo-sqlite';
 export interface Kategori {
   id: number;
   nama: string;
-  tipe: 'pemasukan' | 'pengeluaran';
+  tipe: 'Pemasukan' | 'Pengeluaran';
   ikon: string | null;
-  dibuat: string;
 }
 
 export const operasiKategori = (db: SQLite.SQLiteDatabase) => ({
   async getAll() {
     return await db.getAllAsync<Kategori>('SELECT * FROM kategori ORDER BY nama ASC');
   },
-  async getBytipe(tipe: 'pemasukan' | 'pengeluaran') {
+  async getBytipe(tipe: 'Pemasukan' | 'Pengeluaran') {
     return await db.getAllAsync<Kategori>('SELECT * FROM kategori WHERE tipe = ?', [tipe]);
   },
-  async create(nama: string, tipe: 'pemasukan' | 'pengeluaran', ikon: string | null = null) {
+  async create(nama: string, tipe: 'Pemasukan' | 'Pengeluaran', ikon: string | null = null) {
     return await db.runAsync('INSERT INTO kategori (nama, tipe, ikon) VALUES (?, ?, ?)', [
       nama,
       tipe,
       ikon,
     ]);
   },
-  async update(id: number, nama: string, tipe: 'pemasukan' | 'pengeluaran', ikon: string | null) {
+  async update(id: number, nama: string, tipe: 'Pemasukan' | 'Pengeluaran', ikon: string | null) {
     return await db.runAsync('UPDATE kategori SET nama = ?, tipe = ?, ikon = ? WHERE id = ?', [
       nama,
       tipe,

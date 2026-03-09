@@ -3,7 +3,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,6 +19,13 @@ export default function DetailTransaksiScreen() {
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<TransaksiLengkap | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const muatDetail = useCallback(async () => {
     // FIX: Pastikan ID adalah string tunggal untuk menghindari error TypeScript
@@ -27,7 +34,7 @@ export default function DetailTransaksiScreen() {
     if (!validId) return;
 
     try {
-      setLoading(true);
+      if (isMountedRef.current) setLoading(true);
       const query = `
         SELECT 
           t.*, 
@@ -49,7 +56,7 @@ export default function DetailTransaksiScreen() {
       >(query, [validId]);
 
       if (result) {
-        setData(result);
+        if (isMountedRef.current) setData(result);
       } else {
         Alert.alert('Error', 'Data transaksi tidak ditemukan');
         router.back();
@@ -57,7 +64,7 @@ export default function DetailTransaksiScreen() {
     } catch (error) {
       console.error('Gagal memuat detail transaksi:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   }, [db, id, router]);
 
