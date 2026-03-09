@@ -29,20 +29,26 @@ export default function HalamanDetailPelanggan() {
   const pelangganDb = operasiPelanggan(db);
 
   useEffect(() => {
+    let isCancelled = false;
+
     const muatDetailPelanggan = async () => {
       try {
-        setLoading(true);
+        if (!isCancelled) setLoading(true);
         // Mengkonversi id string ke number sesuai kebutuhan SQLite
         const data = await pelangganDb.ambilPelangganBerdasarkanId(Number(id));
-        setPelanggan(data);
+        if (!isCancelled) setPelanggan(data);
       } catch (error) {
         console.error('Gagal memuat detail pelanggan:', error);
       } finally {
-        setLoading(false);
+        if (!isCancelled) setLoading(false);
       }
     };
 
     if (id) muatDetailPelanggan();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [id, pelangganDb]);
 
   // Fungsi untuk aksi cepat (Telepon & WA)

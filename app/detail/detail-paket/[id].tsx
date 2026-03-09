@@ -22,20 +22,26 @@ export default function HalamanDetailPaket() {
 
   // 2. Fungsi untuk mengambil data detail berdasarkan ID
   useEffect(() => {
+    let isCancelled = false;
+
     async function ambilDetail() {
       try {
-        setLoading(true);
+        if (!isCancelled) setLoading(true);
         // Kita gunakan query langsung atau tambahkan fungsi di operasiPaket
         const result = await db.getFirstAsync<Paket>('SELECT * FROM paket WHERE id = ?', [id]);
-        setPaket(result);
+        if (!isCancelled) setPaket(result);
       } catch (error) {
         console.error('Gagal memuat detail paket:', error);
       } finally {
-        setLoading(false);
+        if (!isCancelled) setLoading(false);
       }
     }
 
     if (id) ambilDetail();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [id, db]);
 
   // Fungsi kembali agar lebih rapi

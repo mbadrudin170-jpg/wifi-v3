@@ -3,7 +3,7 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { operasiPelanggan, Pelanggan } from '../../database/operasi/pelanggan-operasi';
@@ -14,6 +14,13 @@ export default function HalamanPelanggan() {
   const [daftarPelanggan, setDaftarPelanggan] = useState<Pelanggan[]>([]);
   // Ubah default loading ke false jika data default diharapkan sudah ada dari provider
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Gunakan useMemo agar instance operasi tidak dibuat ulang setiap render
   const pelangganDb = useMemo(() => operasiPelanggan(db), [db]);
@@ -22,11 +29,12 @@ export default function HalamanPelanggan() {
     try {
       // Pastikan db tersedia
       const data = await pelangganDb.ambilSemuaPelanggan();
+      if (!isMountedRef.current) return;
       setDaftarPelanggan(data);
     } catch (error) {
       console.error('Gagal memuat pelanggan:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   }, [pelangganDb]);
 

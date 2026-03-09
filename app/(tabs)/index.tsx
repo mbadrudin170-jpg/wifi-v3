@@ -12,7 +12,7 @@ import { formatTanggalAngka } from '@/utils/format/format-tanggal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite'; // Impor Hook Context
-import { useCallback, useEffect, useState } from 'react'; // Tambah useCallback untuk performa
+import { useCallback, useEffect, useRef, useState } from 'react'; // Tambah useCallback untuk performa
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -45,10 +45,18 @@ export default function Home() {
   const [totalAktif, setTotalAktif] = useState(0);
   const [pelangganList, setPelangganList] = useState<PelangganAktifDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   // Fungsi muatData dipisahkan agar bisa dipanggil ulang (refresh)
   const muatData = useCallback(async () => {
     try {
-      setLoading(true);
+      if (isMountedRef.current) setLoading(true);
       // SUNTIKKAN 'db' ke dalam operasi, bukan fungsi migrasi
       const operasi = operasiPelangganAktif(db);
 
@@ -57,12 +65,13 @@ export default function Home() {
         operasi.ambilSemuaPelangganAktifDetail(),
       ]);
 
+      if (!isMountedRef.current) return;
       setTotalAktif(total);
       setPelangganList(list);
     } catch (error) {
       console.error('Gagal mengambil data pelanggan:', error);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   }, [db]);
 

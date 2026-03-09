@@ -5,7 +5,6 @@ export interface Dompet {
   nama: string;
   saldo: number;
   mata_uang: string;
-  dibuat: string;
 }
 
 export const operasiDompet = (db: SQLite.SQLiteDatabase) => ({
