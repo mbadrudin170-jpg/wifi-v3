@@ -2,7 +2,7 @@
 // File Screen Utama (Dashboard) untuk menampilkan daftar pelanggan aktif.
 // Perubahan: Menambahkan logika pengurutan pada modal.
 
-import HeaderCustom from '@/components/header-custom';
+import HeaderCustom from '@/components/header/header-custom';
 import { TombolTambah } from '@/components/tombol';
 import TombolHapus from '@/components/tombol/tombol-hapus';
 import TombolUrutkan from '@/components/tombol/tombol-urutkan';

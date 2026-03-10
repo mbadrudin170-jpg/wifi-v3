@@ -1,17 +1,65 @@
 {
-	"File Path Comment": {
-		"prefix": "path",
-		"body": [
-			"// Path: $TM_FILEPATH"
-		],
-		"description": "Insert current file path as a comment"
-	},
-	"HeaderCustom rightAccessory": {
-		"prefix": "rightAccessory",
-		"body": [
-			"rightAccessory={$1}"
-		],
-		"description": "Menambahkan properti rightAccessory ke komponen HeaderCustom.",
-		"scope": "typescriptreact,javascriptreact"
-	}
+  "File Path Comment": {
+    "prefix": "path",
+    "body": ["// Path: $TM_FILEPATH"],
+    "description": "Menyisipkan path file saat ini sebagai komentar",
+  },
+  "HeaderCustom rightAccessory": {
+    "prefix": "rightAccessory",
+    "body": ["rightAccessory={$1}"],
+    "description": "Menambahkan properti rightAccessory",
+  },
+  "Style Property": {
+    "prefix": "style",
+    "body": ["style={styles.$1}"],
+    "description": "Menambahkan properti style dari StyleSheet",
+  },
+  "Console Log": {
+    "prefix": "console.log",
+    "body": ["console.log('$1:', $2);"],
+    "description": "Membuat console.log dengan label",
+  },
+  "StyleSheet.create": {
+    "prefix": "const styles = StyleSheet.create",
+    "body": ["const styles = StyleSheet.create({", "	$1", "});"],
+    "description": "Membuat boilerplate untuk StyleSheet.create",
+  },
+  "useState Hook": {
+    "prefix": "const useState",
+    "body": ["const [$1, set$2] = useState($3);"],
+    "description": "Membuat hook state useState",
+  },
+  "useEffect Hook": {
+    "prefix": "const useEffect",
+    "body": ["useEffect(() => {", "	$1", "}, [$2]);"],
+    "description": "Membuat hook effect useEffect",
+  },
+  "New Snippet": {
+    "prefix": "snippet",
+    "body": [
+      "\"$1\": {",
+      "\t\"prefix\": \"$2\",",
+      "\t\"body\": [",
+      "\t	\"$3\"",
+      "\t],",
+      "\t\"description\": \"$4\"",
+      "},",
+    ],
+    "description": "Membuat snippet baru",
+  },
+  "onpress": {
+    "prefix": "onpress",
+    "body": ["onpress={()=>$1('$2')}"],
+    "description": "menambahkan properti onpress",
+  },
+  "Export Default Function": {
+    "prefix": "export default function",
+    "body": ["export default function ${1:MyComponent}() {", "\t$0", "}"],
+    "description": "Membuat export default function",
+  },
+  "isi snippet": {
+    "prefix": "isi stylenya",
+    "body": ["$1 : {$2}"],
+    "description": "isi style komponen",
+  },
 }

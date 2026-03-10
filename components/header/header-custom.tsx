@@ -1,8 +1,8 @@
 // Path: /home/user/wifi-v3/components/header-custom.tsx
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
+import { ThemedText } from '../themed-text';
+import { ThemedView } from '../themed-view';
 
 interface HeaderCustomProps {
   children?: ReactNode;

@@ -1,5 +1,5 @@
 // path: app/form/form-paket.tsx
-import HeaderCustom from '@/components/header-custom';
+import HeaderCustom from '@/components/header/header-custom';
 import InputTeks from '@/components/komponen-react/input-teks';
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import { TombolAksi, TombolKembali } from '@/components/tombol';
@@ -31,7 +31,6 @@ const siapkanNilaiDurasi = (nilai: number, unit: UnitDurasi): number => {
   // Nilai dan unitnya akan disimpan secara terpisah.
   return nilai;
 };
-
 
 /**
  * FUNGSI:
@@ -76,7 +75,7 @@ export default function HalamanFormPaket() {
 
     // Menyiapkan nilai durasi tanpa konversi paksa ke hari
     const nilaiDurasiUntukDb = siapkanNilaiDurasi(durasiInput, unitDurasi);
-    
+
     // Jika unitnya Jam, unit yang disimpan di db adalah Hari
     const unitUntukDb = unitDurasi === 'Jam' ? 'Hari' : unitDurasi;
 

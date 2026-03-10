@@ -14,9 +14,10 @@ export const operasiKategori = (db: SQLiteDatabase) => ({
   },
 
   async getByType(tipe: 'Pemasukan' | 'Pengeluaran') {
-    return await db.getAllAsync<Kategori>('SELECT * FROM kategori WHERE tipe = ? ORDER BY nama ASC', [
-      tipe,
-    ]);
+    return await db.getAllAsync<Kategori>(
+      'SELECT * FROM kategori WHERE tipe = ? ORDER BY nama ASC',
+      [tipe]
+    );
   },
 
   async getById(id: number) {

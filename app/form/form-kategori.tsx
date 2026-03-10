@@ -1,13 +1,13 @@
 // Path: ~/wifi-v3/app/form/form-kategori.tsx
 
-import HeaderCustom from '@/components/header-custom';
+import HeaderBiasa from '@/components/header/header-biasa';
 import InputTeks from '@/components/komponen-react/input-teks';
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import ModalDropDown from '@/components/modal/modal';
-import { TombolSimpan } from '@/components/tombol';
+import { TombolKembali, TombolSimpan } from '@/components/tombol';
 import { Kategori, operasiKategori } from '@/database/operasi/kategori-operasi';
-import { useSQLiteContext } from 'expo-sqlite';
 import { useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -83,7 +83,20 @@ export default function HalamanFormKategori() {
 
   return (
     <SafeAreaViewCustom style={styles.container}>
-      <HeaderCustom title='Form Kategori' />
+      <HeaderBiasa>
+        <TombolKembali />
+        <Text style={styles.headerTitle}>Form Kategori</Text>
+        <View style={styles.headerRight} />
+      </HeaderBiasa>
+
+      <View style={styles.wadahTombolTipe}>
+        <Pressable style={styles.tombolTipe}>
+          <Text style={styles.teksTipePemasukan}>Pemasukan</Text>
+        </Pressable>
+        <Pressable style={styles.tombolTipe}>
+          <Text style={styles.teksTipePengeluaran}>Pengeluaran</Text>
+        </Pressable>
+      </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -96,11 +109,16 @@ export default function HalamanFormKategori() {
             value={nama}
             onChangeText={setNama}
           />
+          <View style={styles.wadahTombolTambah}>
+            <Pressable style={styles.tombolTambah}>
+              <Text style={styles.teksTombolTambah}>Tambah</Text>
+            </Pressable>
+          </View>
           <Pressable onPress={() => setModalVisible(true)} style={styles.inputDropdown}>
             <Text style={tipe ? styles.inputDropdownTeks : styles.inputDropdownPlaceholder}>
               {tipe || 'Pilih tipe kategori'}
             </Text>
-            <Text>▼</Text>
+            <Text style={styles.dropdownIcon}>▼</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -112,7 +130,7 @@ export default function HalamanFormKategori() {
       <ModalDropDown
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        title='Pilih Tipe Kategori'
+        title='Pilih Kategori'
         data={dataTipe}
         renderItem={renderItemTipe}
         position='center'
@@ -125,6 +143,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerRight: {
+    width: 40, // Sama dengan lebar TombolKembali untuk keseimbangan
   },
   scrollContainer: {
     flexGrow: 1,
@@ -169,6 +197,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6c757d', // Warna placeholder
   },
+  dropdownIcon: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
   itemModal: {
     padding: 16,
     borderBottomWidth: 1,
@@ -177,5 +209,36 @@ const styles = StyleSheet.create({
   itemModalTeks: {
     fontSize: 16,
     color: '#333',
+  },
+  wadahTombolTambah: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  tombolTambah: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 6,
+  },
+  teksTombolTambah: {
+    color: 'blue',
+    fontSize: 12,
+  },
+  wadahTombolTipe: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    width: '100%',
+  },
+  tombolTipe: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+  },
+  teksTipePemasukan: {
+    color: 'green',
+  },
+  teksTipePengeluaran: {
+    color: 'red',
   },
 });

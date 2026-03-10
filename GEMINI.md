@@ -5,4 +5,4 @@
 3. selalu tambahkan jalur path di bagian paling atas dari sebuah isi file.
 4. selalu menjaga konsistensi dan standar penulisan kode.
 5. saya ingin semua logika dan fungsi saya harus tahu kegunaannya.
-6. tambahkan dokumen lengkap ke file README.md dengan dtail perfile.
+6. setelah melakukan perubahan perbaiki file README.md nya juga

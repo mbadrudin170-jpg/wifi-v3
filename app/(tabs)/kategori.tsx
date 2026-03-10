@@ -1,16 +1,17 @@
 // Path: ~/wifi-v3/app/(tabs)/kategori.tsx
 
-import HeaderCustom from '@/components/header-custom';
+import HeaderCustom from '@/components/header/header-custom';
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import { TombolHapus, TombolTambah } from '@/components/tombol';
 import { Kategori, operasiKategori } from '@/database/operasi/kategori-operasi';
 import { SubKategori, operasiSubKategori } from '@/database/operasi/sub-kategori-operasi';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 export default function HalamanKategori() {
+  const router = useRouter();
   const [tipeAktif, setTipeAktif] = useState<'Pemasukan' | 'Pengeluaran'>('Pemasukan');
   const [daftarKategori, setDaftarKategori] = useState<Kategori[]>([]);
   const [kategoriAktif, setKategoriAktif] = useState<Kategori | null>(null);
@@ -78,7 +79,6 @@ export default function HalamanKategori() {
         rightAccessory={
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TombolHapus onPress={() => console.log('Hapus')} />
-            <TombolTambah onPress={() => console.log('Tambah')} />
           </View>
         }
       />
@@ -94,7 +94,6 @@ export default function HalamanKategori() {
             Pemasukan
           </Text>
         </Pressable>
-
         <Pressable
           style={[styles.tombolTipe, tipeAktif === 'Pengeluaran' && styles.tombolTipeAktif]}
           onPress={() => setTipeAktif('Pengeluaran')}
@@ -139,6 +138,7 @@ export default function HalamanKategori() {
           />
         </View>
       </View>
+      <TombolTambah onPress={() => router.push('/form/form-kategori')} />
     </SafeAreaViewCustom>
   );
 }

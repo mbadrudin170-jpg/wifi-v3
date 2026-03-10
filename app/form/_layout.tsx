@@ -16,6 +16,7 @@ export default function LayoutForm() {
       {/* PERBAIKAN: Menambahkan layar form lainnya ke dalam stack navigasi */}
       <Stack.Screen name='form-pelanggan-aktif' options={{ headerShown: false }} />
       <Stack.Screen name='form-transaksi' options={{ headerShown: false }} />
+      <Stack.Screen name='form-kategori' options={{ headerShown: false }} />
     </Stack>
   );
 }

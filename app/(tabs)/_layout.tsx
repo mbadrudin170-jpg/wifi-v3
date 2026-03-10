@@ -55,7 +55,7 @@ export default function TabLayout() {
           title: 'Transaksi',
           tabBarIcon: ({ color }) => <IconSymbol name='banknote.fill' size={24} color={color} />,
         }}
-      />{' '}
+      />
       <Tabs.Screen
         name='kategori'
         options={{

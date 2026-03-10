@@ -3,7 +3,7 @@
 // Pengguna dapat memilih pelanggan dari daftar yang sudah ada dan memilih paket
 // yang akan dilanggan. Tanggal mulai diatur otomatis ke hari ini.
 
-import HeaderCustom from '@/components/header-custom';
+import HeaderCustom from '@/components/header/header-custom';
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import { TombolKembali } from '@/components/tombol';
 import TombolSimpan from '@/components/tombol/tombol-simpan';
