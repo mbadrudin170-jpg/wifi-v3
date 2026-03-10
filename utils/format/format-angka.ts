@@ -9,7 +9,7 @@
 export const formatAngka = (angka: number | string | null | undefined): string => {
   // Jika input kosong atau null/undefined, kembalikan '0' sebagai default.
   if (angka === null || angka === undefined || angka === '') {
-    return '0';
+    return '';
   }
 
   const angkaNumerik = Number(angka);
@@ -17,7 +17,7 @@ export const formatAngka = (angka: number | string | null | undefined): string =
   // Periksa apakah hasil konversi adalah angka yang valid.
   if (isNaN(angkaNumerik)) {
     console.warn('Input tidak valid untuk formatAngka, dikembalikan "0":', angka);
-    return '0';
+    return '';
   }
 
   try {

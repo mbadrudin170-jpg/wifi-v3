@@ -1,50 +1,32 @@
-// Path: components/tombol/tombol-simpan.tsx
-import { ReactNode } from 'react';
-import { Pressable, PressableProps, StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { ThemedText } from '../themed-text';
-import { ThemedView } from '../themed-view';
+// path: components/tombol/tombol-simpan.tsx
+import { Pressable, StyleSheet, Text, type PressableProps } from 'react-native';
 
 interface TombolSimpanProps extends PressableProps {
-  style?: StyleProp<ViewStyle>;
-  onPress: () => void;
-  teks: ReactNode;
-  children?: ReactNode;
+  onPress?: () => void;
 }
 
 /**
- * Komponen tombol simpan yang dapat digunakan kembali.
- * Menggunakan ikon simpan (save) dan menyediakan prop onPress untuk menangani aksi.
- * Warna ikon akan menyesuaikan dengan tema aplikasi.
+ * Komponen tombol standar untuk aksi 'Simpan'.
+ * @param {TombolSimpanProps} props - Properti untuk komponen tombol.
  */
-export default function TombolSimpan({
-  style,
-  onPress,
-  teks,
-  children,
-  ...props
-}: TombolSimpanProps) {
+export default function TombolSimpan({ onPress, ...props }: TombolSimpanProps) {
   return (
-    <ThemedView style={styles.wadahTombolSimpan}>
-      <Pressable onPress={onPress} style={[styles.tombolSimpan, style]} {...props}>
-        <ThemedText type='subtitle' lightColor='white'>
-          {teks}
-        </ThemedText>
-        {children}
-      </Pressable>
-    </ThemedView>
+    <Pressable style={styles.wadah} onPress={onPress} {...props}>
+      <Text style={styles.teks}>Simpan</Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  wadahTombolSimpan: {
-    backgroundColor: '#007AFF',
-    padding: 12,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  tombolSimpan: {
+  wadah: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  teks: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2E7D32', // Warna hijau
   },
 });

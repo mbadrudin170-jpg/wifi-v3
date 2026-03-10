@@ -16,15 +16,6 @@ export interface PelangganAktifDetail {
 }
 
 export const operasiPelangganAktif = (db: SQLiteDatabase) => ({
-  async hitungTotalPelangganAktif(): Promise<number> {
-    // ================== PERBAIKAN DI SINI ==================
-    // Query ini tidak lagi mencari kolom 'status', tapi menghitung berdasarkan tanggal.
-    const query = `SELECT COUNT(*) FROM pelanggan_aktif WHERE date(tanggal_berakhir) >= date('now', 'localtime')`;
-    const result = await db.getFirstAsync<{ 'COUNT(*)': number }>(query);
-    // =======================================================
-    return result ? result['COUNT(*)'] : 0;
-  },
-
   async ambilSemuaPelangganAktifDetail(): Promise<PelangganAktifDetail[]> {
     const query = `
       SELECT
@@ -88,5 +79,26 @@ export const operasiPelangganAktif = (db: SQLiteDatabase) => ({
     `;
     const result = await db.getFirstAsync<PelangganAktifDetail>(query, id);
     return result ?? null;
+  },
+  async tambahPelangganAktif(
+    pelanggan_id: number,
+    paket_id: number,
+    tanggal_mulai: string,
+    tanggal_berakhir: string
+  ) {
+    const query = `
+      INSERT INTO pelanggan_aktif (pelanggan_id, paket_id, tanggal_mulai, tanggal_berakhir)
+      VALUES (?, ?, ?, ?);
+    `;
+    await db.runAsync(query, pelanggan_id, paket_id, tanggal_mulai, tanggal_berakhir);
+  },
+
+  async hitungTotalPelangganAktif(): Promise<number> {
+    // ================== PERBAIKAN DI SINI ==================
+    // Query ini tidak lagi mencari kolom 'status', tapi menghitung berdasarkan tanggal.
+    const query = `SELECT COUNT(*) FROM pelanggan_aktif WHERE date(tanggal_berakhir) >= date('now', 'localtime')`;
+    const result = await db.getFirstAsync<{ 'COUNT(*)': number }>(query);
+    // =======================================================
+    return result ? result['COUNT(*)'] : 0;
   },
 });

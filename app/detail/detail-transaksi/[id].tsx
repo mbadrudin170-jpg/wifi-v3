@@ -1,4 +1,4 @@
-// Path: /home/user/wifi-v3/app/detail/detail-transaksi.tsx/[id].tsx
+// path: app/detail/detail-transaksi/[id].tsx
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -8,7 +8,8 @@ import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
-import { TransaksiLengkap } from '@/database/operasi/transaksi-operasi';
+// PERBAIKAN: Impor fungsi operasiTransaksi
+import { operasiTransaksi, TransaksiLengkap } from '@/database/operasi/transaksi-operasi';
 import { formatAngka } from '@/utils/format/format-angka';
 import { formatTanggal } from '@/utils/format/format-tanggal';
 
@@ -28,32 +29,14 @@ export default function DetailTransaksiScreen() {
   }, []);
 
   const muatDetail = useCallback(async () => {
-    // FIX: Pastikan ID adalah string tunggal untuk menghindari error TypeScript
     const validId = Array.isArray(id) ? id[0] : id;
-
     if (!validId) return;
 
     try {
       if (isMountedRef.current) setLoading(true);
-      const query = `
-        SELECT 
-          t.*, 
-          p.nama as nama_pelanggan, 
-          pkt.nama as nama_paket, 
-          pkt.harga as harga_paket,
-          k.nama as nama_kategori,
-          d.nama as nama_dompet
-        FROM transaksi t
-        LEFT JOIN pelanggan p ON t.id_pelanggan = p.id
-        LEFT JOIN paket pkt ON t.id_paket = pkt.id
-        LEFT JOIN kategori k ON t.id_kategori = k.id
-        LEFT JOIN dompet d ON t.id_dompet = d.id
-        WHERE t.id = ?
-      `;
 
-      const result = await db.getFirstAsync<
-        TransaksiLengkap & { nama_kategori: string; nama_dompet: string }
-      >(query, [validId]);
+      // PERBAIKAN: Menggunakan fungsi terpusat dari operasiTransaksi
+      const result = await operasiTransaksi.ambilBerdasarkanId(db, validId);
 
       if (result) {
         if (isMountedRef.current) setData(result);
@@ -84,7 +67,7 @@ export default function DetailTransaksiScreen() {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <Stack.Screen
         options={{
-          headerShown: true, // Diaktifkan agar tombol 'Back' muncul
+          headerShown: true,
           title: 'Detail Transaksi',
           headerShadowVisible: false,
         }}
@@ -96,16 +79,20 @@ export default function DetailTransaksiScreen() {
           <Text
             style={[
               styles.nominal,
-              data?.tipe === 'Pengeluaran' ? styles.teksMerah : styles.teksHijau,
+              // PERBAIKAN: Gunakan 'pengeluaran' (lowercase)
+              data?.tipe === 'pengeluaran' ? styles.teksMerah : styles.teksHijau,
             ]}
           >
-            {data?.tipe === 'Pengeluaran' ? '- ' : '+ '}
-            {formatAngka(data?.saldo || 0)}
+            {/* PERBAIKAN: Logika +/- disesuaikan */}
+            {data?.tipe === 'pemasukan' ? '+ ' : '- '}
+            {/* PERBAIKAN: Gunakan properti 'jumlah' */}
+            {formatAngka(data?.jumlah || 0)}
           </Text>
           <View
             style={[
               styles.badgeTipe,
-              data?.tipe === 'Pengeluaran' ? styles.bgMerah : styles.bgHijau,
+              // PERBAIKAN: Gunakan 'pengeluaran' (lowercase)
+              data?.tipe === 'pengeluaran' ? styles.bgMerah : styles.bgHijau,
             ]}
           >
             <Text style={styles.teksBadge}>{data?.tipe}</Text>
@@ -122,12 +109,12 @@ export default function DetailTransaksiScreen() {
           />
           <ItemDetail
             label='Kategori'
-            value={(data as any)?.nama_kategori || 'Tanpa Kategori'}
+            value={data?.nama_kategori || 'Tanpa Kategori'}
             ikon='category'
           />
           <ItemDetail
             label='Sumber Dana / Dompet'
-            value={(data as any)?.nama_dompet || 'Kas'}
+            value={data?.nama_dompet || 'Kas'}
             ikon='account-balance-wallet'
           />
         </View>

@@ -17,11 +17,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// MENGGUNAKAN RELATIVE PATH UNTUK MENGHINDARI CRASH ALIAS
-import { ThemedText } from '@/components/themed-text';
 import TombolSimpan from '@/components/tombol/tombol-simpan';
 import { operasiPelanggan } from '../../database/operasi/pelanggan-operasi';
-import { formatNoHp } from '../../utils/format-no-hp';
+import { formatNoHp } from '../../utils/format/format-no-hp';
 
 export default function FormPelanggan() {
   const router = useRouter();
@@ -34,18 +32,14 @@ export default function FormPelanggan() {
   const [macAdress, setMacAdress] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Ref untuk navigasi keyboard
   const refNoHp = useRef<TextInput>(null);
   const refMac = useRef<TextInput>(null);
   const refAlamat = useRef<TextInput>(null);
 
-  // Fungsi untuk membersihkan nomor HP dari karakter non-numerik
   const bersihkanNoHp = (nomor: string) => nomor.replace(/[^0-9]/g, '');
 
   const handleSimpan = async () => {
-    // 1. Validasi Input
     if (!nama.trim() || !alamat.trim()) {
-      console.warn('[Validation] Nama atau Alamat kosong');
       Alert.alert('Peringatan', 'Nama dan Alamat wajib diisi.');
       return;
     }
@@ -55,29 +49,18 @@ export default function FormPelanggan() {
 
       const dataBaru = {
         nama: nama.trim(),
-        no_hp: bersihkanNoHp(noHp) || null,
+        no_hp: bersihkanNoHp(noHp) || '',
         alamat: alamat.trim(),
-        mac_adress: macAdress.trim() || null,
+        mac_adress: macAdress.trim() || '',
       };
 
-      console.log('[FormPelanggan] Mencoba menyimpan data:', dataBaru);
-
-      // 2. Eksekusi Simpan ke Database
-      const result = await pelangganDb.tambahPelanggan(dataBaru);
-
-      console.log('[Database] Berhasil disimpan dengan ID:', result);
+      await pelangganDb.tambahPelanggan(dataBaru);
 
       Alert.alert('Berhasil', 'Data pelanggan berhasil disimpan', [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (error: any) {
-      // 3. Log Error Detail
-      console.error('================ ERROR SIMPAN PELANGGAN ================');
-      console.error('Pesan Error:', error?.message);
-      console.error('Stack Trace:', error?.stack);
-      console.error('Data Terkait:', { nama, noHp, macAdress, alamat });
-      console.error('========================================================');
-
+      console.error('Gagal menyimpan pelanggan:', error.message);
       Alert.alert(
         'Error Simpan',
         `Gagal menyimpan: ${error?.message || 'Terjadi kesalahan sistem'}`
@@ -106,16 +89,11 @@ export default function FormPelanggan() {
           keyboardShouldPersistTaps='handled'
         >
           <View style={styles.formContainer}>
-            {/* Input Nama */}
+            {/* Input fields... */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nama Lengkap *</Text>
               <View style={styles.inputWrapper}>
-                <MaterialIcons
-                  name='person-outline'
-                  size={20}
-                  color={'#999'}
-                  style={styles.inputIcon}
-                />
+                <MaterialIcons name='person-outline' size={20} color={'#999'} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={nama}
@@ -128,16 +106,10 @@ export default function FormPelanggan() {
               </View>
             </View>
 
-            {/* Input No HP */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nomor WhatsApp / HP</Text>
               <View style={styles.inputWrapper}>
-                <MaterialIcons
-                  name='phone-android'
-                  size={20}
-                  color={'#999'}
-                  style={styles.inputIcon}
-                />
+                <MaterialIcons name='phone-android' size={20} color={'#999'} style={styles.inputIcon} />
                 <TextInput
                   ref={refNoHp}
                   style={styles.input}
@@ -151,7 +123,6 @@ export default function FormPelanggan() {
               </View>
             </View>
 
-            {/* Input MAC Address */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>MAC Address</Text>
               <View style={styles.inputWrapper}>
@@ -168,16 +139,10 @@ export default function FormPelanggan() {
               </View>
             </View>
 
-            {/* Input Alamat */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Alamat *</Text>
               <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                <MaterialIcons
-                  name='place'
-                  size={20}
-                  color={'#999'}
-                  style={[styles.inputIcon, { marginTop: 12 }]}
-                />
+                <MaterialIcons name='place' size={20} color={'#999'} style={[styles.inputIcon, { marginTop: 12 }]} />
                 <TextInput
                   ref={refAlamat}
                   style={[styles.input, styles.textArea]}
@@ -196,16 +161,12 @@ export default function FormPelanggan() {
         </ScrollView>
 
         <View style={styles.footer}>
-          <TombolSimpan teks='Simpan' onPress={handleSimpan} />
-          <Pressable
-            style={[styles.saveButton, loading && styles.buttonDisabled]}
+          {/* PERBAIKAN: Menggunakan disabled dan mengubah teks saat loading */}
+          <TombolSimpan
+            teks={loading ? 'Menyimpan...' : 'Simpan Pelanggan'}
             onPress={handleSimpan}
             disabled={loading}
-          >
-            <ThemedText type='default' style={styles.saveButtonText}>
-              {loading ? 'Menyimpan...' : 'Simpan Pelanggan'}
-            </ThemedText>
-          </Pressable>
+          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -244,14 +205,4 @@ const styles = StyleSheet.create({
   textArea: { height: 90, paddingTop: 12 },
   infoText: { fontSize: 12, color: '#999', fontStyle: 'italic' },
   footer: { padding: 20, borderTopWidth: 1, borderTopColor: '#F0F0F0', backgroundColor: '#FFFFFF' },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    height: 55,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-  },
-  buttonDisabled: { backgroundColor: '#A0CCFF' },
-  saveButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold' },
 });

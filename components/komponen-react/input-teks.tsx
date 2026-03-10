@@ -1,7 +1,7 @@
-// Path: ~/wifi-v3/components/komponen-react/input-teks.tsx
+// Path: components/komponen-react/input-teks.tsx
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 
 interface InputTeksProps extends TextInputProps {
@@ -9,7 +9,7 @@ interface InputTeksProps extends TextInputProps {
   style?: TextInputProps['style'];
 }
 
-export default function InputTeks({ label, style, ...props }: InputTeksProps) {
+const InputTeks = forwardRef<TextInput, InputTeksProps>(({ label, style, ...props }, ref) => {
   const borderColor = useThemeColor({ light: '#ccc', dark: '#555' }, 'text');
   const color = useThemeColor({ light: '#000', dark: '#fff' }, 'text');
 
@@ -19,13 +19,19 @@ export default function InputTeks({ label, style, ...props }: InputTeksProps) {
         {label}
       </ThemedText>
       <TextInput
+        ref={ref}
         style={[styles.input, { borderColor, color }, style]}
         placeholderTextColor='#999'
         {...props}
       />
     </View>
   );
-}
+});
+
+// PERBAIKAN: Menambahkan displayName untuk mematuhi aturan react/display-name.
+InputTeks.displayName = 'InputTeks';
+
+export default InputTeks;
 
 const styles = StyleSheet.create({
   container: {

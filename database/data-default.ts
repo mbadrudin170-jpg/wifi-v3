@@ -104,7 +104,7 @@ export const insertDefaultData = async (db: SQLiteDatabase) => {
       // 2. Buat Transaksi Pembayaran Awal
       await db.runAsync(
         `INSERT INTO transaksi 
-          (deskripsi, id_dompet, id_kategori, id_pelanggan, id_paket, saldo, tipe, catatan, tanggal)
+          (deskripsi, id_dompet, id_kategori, id_pelanggan, id_paket, jumlah, tipe, catatan, tanggal)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           `Pembayaran paket ${paketDiberikan.nama} oleh ${pelanggan.nama}`,

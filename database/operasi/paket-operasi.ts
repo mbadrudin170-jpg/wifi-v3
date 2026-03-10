@@ -2,11 +2,13 @@
 
 import { type SQLiteDatabase } from 'expo-sqlite';
 
+// PERUBAHAN: Menambahkan 'unit_durasi' ke interface Paket
 export interface Paket {
   id: number;
   nama: string;
   harga: number;
   durasi: number;
+  unit_durasi: 'Hari' | 'Bulan'; // Menyimpan unit durasi
   kecepatan: number;
 }
 
@@ -16,6 +18,7 @@ export const operasiPaket = (db: SQLiteDatabase) => ({
    * @returns Promise yang akan resolve dengan array berisi semua data paket.
    */
   async ambilSemuaPaket(): Promise<Paket[]> {
+    // PERUBAHAN: Memastikan 'unit_durasi' juga diambil
     const query = `SELECT * FROM paket ORDER BY harga ASC;`;
     const hasil = await db.getAllAsync<Paket>(query);
     return hasil;
@@ -37,8 +40,13 @@ export const operasiPaket = (db: SQLiteDatabase) => ({
    * @returns Promise yang resolve ketika operasi selesai.
    */
   async tambahPaket(data: Omit<Paket, 'id'>): Promise<void> {
-    const { nama, harga, durasi, kecepatan } = data;
-    const query = `INSERT INTO paket (nama, harga, durasi, kecepatan) VALUES (?, ?, ?, ?);`;
-    await db.runAsync(query, [nama, harga, durasi, kecepatan]);
+    // PERUBAHAN: Mengekstrak 'unit_durasi' dari data
+    const { nama, harga, durasi, unit_durasi, kecepatan } = data;
+    
+    // PERUBAHAN: Menambahkan kolom dan nilai 'unit_durasi' ke query INSERT
+    const query = `INSERT INTO paket (nama, harga, durasi, unit_durasi, kecepatan) VALUES (?, ?, ?, ?, ?);`;
+    
+    // PERUBAHAN: Menambahkan 'unit_durasi' ke dalam array parameter
+    await db.runAsync(query, [nama, harga, durasi, unit_durasi, kecepatan]);
   },
 });

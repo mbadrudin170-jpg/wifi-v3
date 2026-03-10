@@ -1,4 +1,4 @@
-// Path: ~/wifi-v3/hooks/status-pelanggan.ts// Path: ~/wifi-v3/hooks/status-pelanggan.ts
+// Path: hooks/status-pelanggan.ts
 
 /**
  * Menganalisis tanggal berakhir untuk menentukan status berlangganan dan sisa hari.
@@ -22,65 +22,57 @@ export const getStatusPelanggan = (tanggalBerakhir: string | null | undefined) =
     };
   }
 
-  try {
-    const sekarang = new Date();
-    const akhir = new Date(tanggalBerakhir);
+  // Parse tanggal dengan aman
+  const tglBerakhir = new Date(tanggalBerakhir);
 
-    // Mengatur jam, menit, dan detik ke nol untuk memastikan perbandingan hanya berdasarkan tanggal.
-    sekarang.setHours(0, 0, 0, 0);
-    akhir.setHours(0, 0, 0, 0);
+  // Periksa apakah tanggal valid setelah parsing
+  if (isNaN(tglBerakhir.getTime())) {
+    console.error('Format tanggal tidak valid:', tanggalBerakhir);
+    return {
+      sisaHari: 0,
+      statusTeks: 'Tanggal Error',
+      detailTeks: 'Format tanggal salah',
+      warna: '#E53E3E', // Merah untuk error
+    };
+  }
 
-    // Menghitung selisih waktu dalam milidetik
-    const selisihMs = akhir.getTime() - sekarang.getTime();
+  const hariIni = new Date();
 
-    // Mengonversi selisih milidetik ke hari.
-    // Math.ceil digunakan agar "sisa 1.1 hari" dihitung sebagai "sisa 2 hari".
-    const sisaHari = Math.ceil(selisihMs / (1000 * 60 * 60 * 24));
+  // Reset waktu untuk perbandingan tanggal yang akurat
+  hariIni.setHours(0, 0, 0, 0);
+  tglBerakhir.setHours(0, 0, 0, 0);
 
-    // KASUS 1: Paket sudah tidak aktif (sisa hari negatif)
-    if (sisaHari < 0) {
-      return {
-        sisaHari: 0, // Tampilkan 0, bukan angka negatif
-        statusTeks: 'Tidak Aktif',
-        detailTeks: `Berakhir ${Math.abs(sisaHari)} hari lalu`,
-        warna: '#E53E3E', // Merah
-      };
-    }
+  const selisihWaktu = tglBerakhir.getTime() - hariIni.getTime();
+  const sisaHari = Math.ceil(selisihWaktu / (1000 * 3600 * 24));
 
-    // KASUS 2: Paket berakhir tepat hari ini
-    if (sisaHari === 0) {
-      return {
-        sisaHari,
-        statusTeks: 'Berakhir Hari Ini',
-        detailTeks: 'Sisa 0 hari',
-        warna: '#DD6B20', // Oranye
-      };
-    }
-
-    // KASUS 3: Paket akan segera berakhir (misal: 3 hari lagi atau kurang)
-    if (sisaHari <= 3) {
-      return {
-        sisaHari,
-        statusTeks: 'Segera Berakhir',
-        detailTeks: `Sisa ${sisaHari} hari`,
-        warna: '#D69E2E', // Kuning/Coklat muda
-      };
-    }
-
-    // KASUS 4: Paket masih aktif
+  // Logika status berdasarkan sisa hari
+  if (sisaHari > 7) {
     return {
       sisaHari,
       statusTeks: 'Aktif',
       detailTeks: `Sisa ${sisaHari} hari`,
       warna: '#38A169', // Hijau
     };
-  } catch (error) {
-    console.error('Gagal menghitung status pelanggan:', error);
+  } else if (sisaHari > 0) {
     return {
-      sisaHari: 0,
-      statusTeks: 'Error',
-      detailTeks: 'Tanggal tidak valid',
-      warna: '#A0AEC0',
+      sisaHari,
+      statusTeks: 'Segera Berakhir',
+      detailTeks: `Sisa ${sisaHari} hari`,
+      warna: '#DD6B20', // Oranye
+    };
+  } else if (sisaHari === 0) {
+    return {
+      sisaHari,
+      statusTeks: 'Berakhir Hari Ini',
+      detailTeks: 'Berakhir hari ini',
+      warna: '#E53E3E', // Merah
+    };
+  } else {
+    return {
+      sisaHari,
+      statusTeks: 'Tidak Aktif',
+      detailTeks: `Berakhir ${Math.abs(sisaHari)} hari lalu`,
+      warna: '#718096', // Abu-abu gelap
     };
   }
 };

@@ -5,9 +5,9 @@ import * as SQLite from 'expo-sqlite';
 export interface Pelanggan {
   id: number;
   nama: string;
-  no_hp: string | null;
-  mac_adress: string | null;
-  alamat: string | null;
+  no_hp: string;
+  mac_adress: string;
+  alamat: string;
 }
 
 export type PelangganBaru = Omit<Pelanggan, 'id'>;
@@ -29,8 +29,8 @@ export const operasiPelanggan = (db: SQLite.SQLiteDatabase) => ({
     return await db.runAsync(
       'INSERT INTO pelanggan (nama, no_hp, mac_adress, alamat) VALUES (?, ?, ?, ?)',
       pelanggan.nama || '',
-      pelanggan.no_hp || null,
-      pelanggan.mac_adress || null,
+      pelanggan.no_hp,
+      pelanggan.mac_adress,
       pelanggan.alamat || ''
     );
   },

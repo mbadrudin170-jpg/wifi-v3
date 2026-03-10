@@ -25,7 +25,8 @@ export async function migrateDbIfNeeded(db: SQLite.SQLiteDatabase) {
       id INTEGER PRIMARY KEY NOT NULL, 
       nama TEXT NOT NULL, 
       harga REAL NOT NULL, 
-      durasi INTEGER NOT NULL, 
+      durasi INTEGER NOT NULL,
+      unit_durasi TEXT NOT NULL DEFAULT 'Hari', 
       kecepatan INTEGER NOT NULL
     );
 
@@ -33,8 +34,17 @@ export async function migrateDbIfNeeded(db: SQLite.SQLiteDatabase) {
     CREATE TABLE IF NOT EXISTS kategori (
       id INTEGER PRIMARY KEY NOT NULL, 
       nama TEXT NOT NULL, 
-      tipe TEXT NOT NULL, -- 'pemasukan' atau 'pengeluaran'
+      tipe TEXT NOT NULL, -- 'Pemasukan' atau 'Pengeluaran'
       ikon TEXT
+    );
+
+    -- Tabel Sub Kategori (Koreksi)
+    CREATE TABLE IF NOT EXISTS sub_kategori (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      nama TEXT NOT NULL, -- Kolom diganti dari 'sub_kategori' menjadi 'nama' untuk konsistensi
+      kategori_id INTEGER NOT NULL,
+      -- Foreign key diperbaiki untuk merujuk ke tabel 'kategori'
+      FOREIGN KEY (kategori_id) REFERENCES kategori (id) ON DELETE CASCADE
     );
 
     -- 4. Tabel Pelanggan
@@ -57,12 +67,13 @@ export async function migrateDbIfNeeded(db: SQLite.SQLiteDatabase) {
       FOREIGN KEY (paket_id) REFERENCES paket (id) ON DELETE SET NULL
     );
 
-    -- 6. Tabel Transaksi (Versi Final)
+    -- 6. Tabel Transaksi (Disempurnakan)
     CREATE TABLE IF NOT EXISTS transaksi (
       id INTEGER PRIMARY KEY NOT NULL,
       deskripsi TEXT NOT NULL,
       id_dompet INTEGER,
       id_kategori INTEGER,
+      id_sub_kategori INTEGER, -- Kolom baru ditambahkan untuk sub-kategori
       id_pelanggan INTEGER,
       id_paket INTEGER,
       jumlah REAL NOT NULL,
@@ -72,6 +83,7 @@ export async function migrateDbIfNeeded(db: SQLite.SQLiteDatabase) {
       dibuat TEXT DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (id_dompet) REFERENCES dompet (id) ON DELETE SET NULL,
       FOREIGN KEY (id_kategori) REFERENCES kategori (id) ON DELETE SET NULL,
+      FOREIGN KEY (id_sub_kategori) REFERENCES sub_kategori (id) ON DELETE SET NULL, -- FK baru
       FOREIGN KEY (id_pelanggan) REFERENCES pelanggan (id) ON DELETE SET NULL,
       FOREIGN KEY (id_paket) REFERENCES paket (id) ON DELETE SET NULL
     );

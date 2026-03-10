@@ -1,19 +1,30 @@
 // path: app/(tabs)/index.tsx
 // File Screen Utama (Dashboard) untuk menampilkan daftar pelanggan aktif.
-// Perubahan: Menggunakan useSQLiteContext untuk menyuntikkan db ke fungsi operasi.
+// Perubahan: Menambahkan logika pengurutan pada modal.
 
+import HeaderCustom from '@/components/header-custom';
+import { TombolTambah } from '@/components/tombol';
+import TombolHapus from '@/components/tombol/tombol-hapus';
+import TombolUrutkan from '@/components/tombol/tombol-urutkan';
 import {
   operasiPelangganAktif,
   type PelangganAktifDetail,
 } from '@/database/operasi/pelanggan-aktif-operasi';
-// import { migrateDbIfNeeded } from '@/database/sqlite'; // Hapus ini, tidak butuh di Screen
 import { getStatusPelanggan } from '@/hooks/status-pelanggan';
 import { formatTanggalAngka } from '@/utils/format/format-tanggal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
-import { useSQLiteContext } from 'expo-sqlite'; // Impor Hook Context
-import { useCallback, useEffect, useRef, useState } from 'react'; // Tambah useCallback untuk performa
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const RenderItemPelanggan = ({
@@ -41,11 +52,45 @@ const RenderItemPelanggan = ({
 
 export default function Home() {
   const router = useRouter();
-  const db = useSQLiteContext(); // Ambil instance database yang sudah dimigrasi oleh Provider
+  const db = useSQLiteContext();
   const [totalAktif, setTotalAktif] = useState(0);
   const [pelangganList, setPelangganList] = useState<PelangganAktifDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useRef(true);
+  const [isSortModalVisible, setSortModalVisible] = useState(false);
+
+  type TipeUrut = 'nama-asc' | 'nama-desc' | 'jatuh-tempo-asc' | 'mulai-desc';
+
+  const handleUrutkan = (tipe: TipeUrut) => {
+    const daftarUrut = [...pelangganList];
+
+    switch (tipe) {
+      case 'nama-asc':
+        daftarUrut.sort((a, b) => a.nama.localeCompare(b.nama));
+        break;
+      case 'nama-desc':
+        daftarUrut.sort((a, b) => b.nama.localeCompare(a.nama));
+        break;
+      case 'jatuh-tempo-asc':
+        // PERBAIKAN: Menangani kasus `null` pada tanggal dengan memberikan nilai default.
+        // Ini mencegah error "No overload matches this call" saat `new Date(null)`.
+        daftarUrut.sort((a, b) => {
+          const dateA = a.tanggal_berakhir ? new Date(a.tanggal_berakhir).getTime() : Infinity;
+          const dateB = b.tanggal_berakhir ? new Date(b.tanggal_berakhir).getTime() : Infinity;
+          return dateA - dateB;
+        });
+        break;
+      case 'mulai-desc':
+        console.log("Pengurutan 'Tanggal Mulai Terbaru' perlu data tambahan.");
+        break;
+    }
+
+    setPelangganList(daftarUrut);
+    tutupModalUrutkan();
+  };
+
+  const bukaModalUrutkan = () => setSortModalVisible(true);
+  const tutupModalUrutkan = () => setSortModalVisible(false);
 
   useEffect(() => {
     return () => {
@@ -53,18 +98,14 @@ export default function Home() {
     };
   }, []);
 
-  // Fungsi muatData dipisahkan agar bisa dipanggil ulang (refresh)
   const muatData = useCallback(async () => {
     try {
       if (isMountedRef.current) setLoading(true);
-      // SUNTIKKAN 'db' ke dalam operasi, bukan fungsi migrasi
       const operasi = operasiPelangganAktif(db);
-
       const [total, list] = await Promise.all([
         operasi.hitungTotalPelangganAktif(),
         operasi.ambilSemuaPelangganAktifDetail(),
       ]);
-
       if (!isMountedRef.current) return;
       setTotalAktif(total);
       setPelangganList(list);
@@ -85,21 +126,19 @@ export default function Home() {
 
   return (
     <SafeAreaView style={Styles.container}>
-      {/* Header */}
-      <View style={Styles.header}>
-        <View style={Styles.judul}>
-          <Text style={Styles.teksJudul}>Dashboard</Text>
-          <Text style={Styles.teksSubjudul}>Pelanggan Aktif: {totalAktif}</Text>
+      <HeaderCustom
+        rightAccessory={
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TombolUrutkan onPress={bukaModalUrutkan} />
+            <TombolHapus />
+          </View>
+        }
+      >
+        <View style={{ width: '100%' }}>
+          <Text style={Styles.headerContentTitle}>Dashboard</Text>
+          <Text style={Styles.headerContentSubtitle}>Pelanggan Aktif: {totalAktif}</Text>
         </View>
-        <View style={Styles.containerTombolHeader}>
-          <Pressable style={Styles.tombolHeader}>
-            <MaterialIcons name='add-circle' size={32} color='#2E7D32' />
-          </Pressable>
-          <Pressable style={Styles.tombolHeader} onPress={muatData}>
-            <MaterialIcons name='refresh' size={32} color='#0277BD' />
-          </Pressable>
-        </View>
-      </View>
+      </HeaderCustom>
 
       {loading ? (
         <View style={Styles.emptyContainer}>
@@ -123,27 +162,45 @@ export default function Home() {
           )}
         />
       )}
+      <TombolTambah onPress={() => router.push('/form/form-pelanggan-aktif')} />
+
+      <Modal
+        animationType='fade'
+        transparent={true}
+        visible={isSortModalVisible}
+        onRequestClose={tutupModalUrutkan}
+      >
+        <Pressable style={Styles.modalOverlay} onPress={tutupModalUrutkan}>
+          <View style={Styles.modalContent}>
+            <Text style={Styles.modalTitle}>Urutkan Berdasarkan</Text>
+
+            <Pressable style={Styles.sortOption} onPress={() => handleUrutkan('nama-asc')}>
+              <Text style={Styles.sortOptionText}>Nama (A-Z)</Text>
+            </Pressable>
+
+            <Pressable style={Styles.sortOption} onPress={() => handleUrutkan('nama-desc')}>
+              <Text style={Styles.sortOptionText}>Nama (Z-A)</Text>
+            </Pressable>
+
+            <Pressable style={Styles.sortOption} onPress={() => handleUrutkan('jatuh-tempo-asc')}>
+              <Text style={Styles.sortOptionText}>Jatuh Tempo Terdekat</Text>
+            </Pressable>
+
+            <Pressable
+              style={[Styles.sortOption, { borderBottomWidth: 0 }]}
+              onPress={() => handleUrutkan('mulai-desc')}
+            >
+              <Text style={Styles.sortOptionText}>Tanggal Mulai Terbaru</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const Styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f4f5f7' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  judul: { flexDirection: 'column' },
-  teksJudul: { fontSize: 26, fontWeight: 'bold', color: '#1a1a1a' },
-  teksSubjudul: { fontSize: 16, color: '#666666', marginTop: 4 },
-  containerTombolHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  tombolHeader: { padding: 6 },
   listContentContainer: { paddingHorizontal: 20, paddingVertical: 15 },
   listHeader: { fontSize: 18, fontWeight: 'bold', color: '#37474F', marginBottom: 15 },
   itemContainer: {
@@ -165,4 +222,51 @@ const Styles = StyleSheet.create({
   itemAksiContainer: { alignItems: 'flex-end', gap: 2 },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100 },
   emptyText: { marginTop: 10, fontSize: 16, color: '#78909C' },
+  headerContentTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'left',
+  },
+  headerContentSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+    textAlign: 'left',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 25,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  sortOption: {
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sortOptionText: {
+    fontSize: 16,
+    color: '#37474F',
+    textAlign: 'center',
+  },
 });

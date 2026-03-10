@@ -5,5 +5,13 @@
 			"// Path: $TM_FILEPATH"
 		],
 		"description": "Insert current file path as a comment"
+	},
+	"HeaderCustom rightAccessory": {
+		"prefix": "rightAccessory",
+		"body": [
+			"rightAccessory={$1}"
+		],
+		"description": "Menambahkan properti rightAccessory ke komponen HeaderCustom.",
+		"scope": "typescriptreact,javascriptreact"
 	}
 }

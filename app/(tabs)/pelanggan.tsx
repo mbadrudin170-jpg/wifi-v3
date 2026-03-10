@@ -1,5 +1,6 @@
 // Path: ~/wifi-v3/app/(tabs)/pelanggan.tsx
 
+import { TombolTambah } from '@/components/tombol';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
@@ -104,10 +105,7 @@ export default function HalamanPelanggan() {
           }
         />
       )}
-
-      <Pressable style={styles.tombolTambah} onPress={() => router.push('/form/form-pelanggan')}>
-        <MaterialIcons name='add' size={30} color={'white'} />
-      </Pressable>
+      <TombolTambah onPress={() => router.push('/form/form-pelanggan-aktif')} />
     </SafeAreaView>
   );
 }

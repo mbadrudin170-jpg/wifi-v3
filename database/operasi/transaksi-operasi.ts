@@ -5,12 +5,12 @@ import * as SQLite from 'expo-sqlite';
 export interface Transaksi {
   id: number;
   deskripsi: string;
-  id_dompet: number;
-  id_kategori: number;
+  id_dompet: number | null;
+  id_kategori: number | null;
   id_pelanggan: number | null;
-  id_paket: number;
-  saldo: number;
-  tipe: 'Pemasukan' | 'Pengeluaran';
+  id_paket: number | null;
+  jumlah: number;
+  tipe: 'pemasukan' | 'pengeluaran';
   catatan: string | null;
   tanggal: string;
   dibuat: string;

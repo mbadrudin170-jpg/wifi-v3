@@ -34,9 +34,9 @@ export default function DetailLayout() {
         },
       }}
     >
-      {/* Definisi Screen berdasarkan folder yang ada di gambar kamu */}
+      {/* PERBAIKAN: Menghapus ekstensi .tsx dari nama rute */}
       <Stack.Screen
-        name='detail-transaksi.tsx/[id]'
+        name='detail-transaksi/[id]'
         options={{
           title: 'Detail Transaksi',
         }}

@@ -19,5 +19,6 @@ export default function SafeAreaViewCustom({ children, style }: SafeAreaViewCust
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 10,
   },
 });

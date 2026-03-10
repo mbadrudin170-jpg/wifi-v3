@@ -1,41 +1,58 @@
 // Path: /home/user/wifi-v3/components/header-custom.tsx
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, ViewStyle } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
 interface HeaderCustomProps {
-  children: ReactNode;
+  children?: ReactNode;
   leftAccessory?: ReactNode;
   rightAccessory?: ReactNode;
   style?: StyleProp<ViewStyle>;
+  title?: string;
 }
 
-export default function HeaderCustom({
+/**
+ * FUNGSI:
+ * HeaderCustom adalah komponen header serbaguna yang dapat dikonfigurasi.
+ * Komponen ini secara otomatis menangani "safe area" di bagian atas layar.
+ * Terdiri dari tiga bagian utama: kiri (leftAccessory), tengah (title, children),
+ * dan kanan (rightAccessory) untuk fleksibilitas tata letak maksimum.
+ */ export default function HeaderCustom({
   children,
   leftAccessory,
   rightAccessory,
   style,
+  title,
 }: HeaderCustomProps) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <ThemedView
-      style={[
-        styles.container,
-        {
-          paddingTop: insets.top,
-        },
-        style,
-      ]}
-    >
+    <ThemedView style={[styles.container, style]}>
       <ThemedView style={styles.content}>
-        <ThemedView style={styles.leftAccessory}>{leftAccessory}</ThemedView>
+        {/* Bagian Kiri - Hanya render jika ada konten */}
+        {leftAccessory && (
+          <ThemedView style={styles.accessoryContainer}>{leftAccessory}</ThemedView>
+        )}
 
-        {/* PERBAIKAN: Gunakan <View> sebagai wadah agar bisa menampung banyak komponen */}
-        <ThemedView style={styles.centerContainer}>{children}</ThemedView>
+        {/* Bagian Tengah - Akan mengisi ruang yang tersedia */}
+        <ThemedView
+          style={[
+            styles.centerContainer,
+            // Penyesuaian flex berdasarkan aksesori yang ada
+            !leftAccessory && !rightAccessory && styles.centerContainerFull,
+            !leftAccessory && styles.centerContainerNoLeft,
+            !rightAccessory && styles.centerContainerNoRight,
+          ]}
+        >
+          {title && <ThemedText>{title}</ThemedText>}
+          {children}
+        </ThemedView>
 
-        <ThemedView style={styles.rightAccessory}>{rightAccessory}</ThemedView>
+        {/* Bagian Kanan - Hanya render jika ada konten */}
+        {rightAccessory && (
+          <ThemedView style={[styles.accessoryContainer, styles.rightAccessory]}>
+            {rightAccessory}
+          </ThemedView>
+        )}
       </ThemedView>
     </ThemedView>
   );
@@ -49,21 +66,28 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: 'transparent',
   },
-  leftAccessory: {
+  accessoryContainer: {
     flex: 1,
     backgroundColor: 'transparent',
   },
-  // PERBAIKAN: Mengganti nama dan properti style agar lebih fleksibel
   centerContainer: {
-    flex: 2,
-    alignItems: 'center', // Memusatkan konten di dalamnya (seperti teks)
+    flex: 3,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 8,
+  },
+  centerContainerFull: {
+    flex: 1, // Full width jika tidak ada aksesori
+  },
+  centerContainerNoLeft: {
+    marginLeft: 0, // Mulai dari kiri jika tidak ada left accessory
+  },
+  centerContainerNoRight: {
+    marginRight: 0,
   },
   rightAccessory: {
-    flex: 1,
     alignItems: 'flex-end',
-    backgroundColor: 'transparent',
   },
 });
