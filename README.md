@@ -1,54 +1,114 @@
-> Edited for use in IDX on 07/09/12
+# Dokumentasi Proyek WiFi V3
 
-# Welcome to your Expo app 👋
+## 1. Ikhtisar Proyek
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplikasi ini adalah sistem manajemen untuk layanan WiFi, dibangun menggunakan React Native dan Expo. Aplikasi ini memungkinkan pengelolaan data pelanggan, paket layanan, transaksi keuangan, dan kategori. Aplikasi ini menggunakan database SQLite untuk penyimpanan data lokal.
 
-## Get started
+## 2. Struktur Proyek
 
-#### Android
+Proyek ini diorganisir ke dalam beberapa direktori utama yang memisahkan tanggung jawab (concerns) secara logis.
 
-Android previews are defined as a `workspace.onStart` hook and started as a vscode task when the workspace is opened/started.
-
-Note, if you can't find the task, either:
-
-- Rebuild the environment (using command palette: `IDX: Rebuild Environment`), or
-- Run `npm run android -- --tunnel` command manually run android and see the output in your terminal. The device should pick up this new command and switch to start displaying the output from it.
-
-In the output of this command/task, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You'll also find options to open the app's developer menu, reload the app, and more.
-
-#### Web
-
-Web previews will be started and managred automatically. Use the toolbar to manually refresh.
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+.
+├── app/                  # File routing dan layar utama aplikasi
+│   ├── (tabs)/           # Layar dengan navigasi tab
+│   ├── detail/           # Layar detail untuk item tertentu
+│   └── form/             # Layar formulir untuk input data
+├── assets/               # Gambar, ikon, dan aset statis lainnya
+├── components/           # Komponen React yang dapat digunakan kembali
+│   ├── komponen-react/   # Komponen UI dasar
+│   ├── modal/            # Komponen modal
+│   ├── tombol/           # Berbagai jenis tombol
+│   └── ui/               # Komponen UI lainnya
+├── constants/            # Nilai konstan (misalnya, tema)
+├── database/             # Skema dan operasi database
+│   └── operasi/          # Fungsi CRUD untuk setiap tabel
+├── hooks/                # Custom hooks React untuk logika bisnis
+├── scripts/              # Skrip bantuan untuk pengembangan
+└── utils/                # Fungsi utilitas (misalnya, formatting)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 3. Detail Dokumentasi per File
 
-## Learn more
+### 3.1. `app` (Routing & Layar)
 
-To learn more about developing your project with Expo, look at the following resources:
+Direktori ini mengelola semua rute dan layar aplikasi menggunakan sistem routing berbasis file dari Expo Router.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+-   **`app/_layout.tsx`**:
+    -   **Kegunaan**: File layout root aplikasi. Menginisialisasi database SQLite, mengatur provider tema, dan menangani pemuatan font. Ini adalah titik masuk utama aplikasi.
 
-## Join the community
+-   **`app/(tabs)/_layout.tsx`**:
+    -   **Kegunaan**: Mengatur layout untuk navigasi tab utama. Mendefinisikan setiap tab (Beranda, Pelanggan, Transaksi, dll.) dan ikonnya.
 
-Join our community of developers creating universal apps.
+-   **`app/(tabs)/index.tsx`**:
+    -   **Kegunaan**: Layar Beranda (Dashboard). Menampilkan ringkasan informasi penting seperti jumlah pelanggan aktif, total pemasukan, dan total pengeluaran.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+-   **`app/(tabs)/pelanggan.tsx`**:
+    -   **Kegunaan**: Menampilkan daftar semua pelanggan. Menyediakan fungsionalitas pencarian dan pengurutan, serta tombol untuk menambah pelanggan baru.
+
+-   **`app/(tabs)/transaksi.tsx`, `paket.tsx`, `kategori.tsx`**:
+    -   **Kegunaan**: Layar serupa untuk menampilkan daftar transaksi, paket, dan kategori.
+
+-   **`app/form/form-kategori.tsx`**:
+    -   **Kegunaan**: Formulir untuk menambah atau mengedit data kategori.
+    -   **Logika**:
+        -   Menggunakan state (`useState`) untuk mengelola input nama dan tipe kategori.
+        -   Menggunakan `useSQLiteContext` untuk mengakses database.
+        -   Memanggil fungsi `create` dari `operasiKategori` untuk menyimpan data baru.
+        -   Menampilkan modal (`ModalDropDown`) untuk memilih tipe ('Pemasukan' atau 'Pengeluaran').
+        -   Memberikan umpan balik kepada pengguna melalui `Alert`.
+
+-   **`app/detail/pelanggan/[id].tsx`**:
+    -   **Kegunaan**: Menampilkan informasi detail dari seorang pelanggan berdasarkan `id` yang diterima dari parameter rute.
+
+### 3.2. `components` (Komponen UI)
+
+Komponen yang dapat digunakan kembali di seluruh aplikasi.
+
+-   **`components/modal/modal.tsx`**:
+    -   **Kegunaan**: Komponen `ModalDropDown` generik yang dapat dikonfigurasi.
+    -   **Fungsi**: Menerima properti seperti `visible`, `onClose`, `data`, dan `renderItem` untuk menampilkan konten dinamis dalam sebuah modal. Sangat fleksibel dan digunakan di banyak bagian aplikasi untuk pemilihan data.
+
+-   **`components/komponen-react/input-teks.tsx`**:
+    -   **Kegunaan**: Komponen input teks standar dengan label dan placeholder.
+
+-   **`components/tombol/`**:
+    -   **Kegunaan**: Direktori ini berisi berbagai jenis tombol yang konsisten secara visual, seperti `TombolSimpan`, `TombolHapus`, `TombolEdit`, dll. Setiap tombol memiliki gaya dan ikon yang telah ditentukan sebelumnya.
+
+### 3.3. `database` (Manajemen Data)
+
+-   **`database/sqlite.ts`**:
+    -   **Kegunaan**: Titik pusat untuk manajemen database.
+    -   **Fungsi**:
+        -   `initDb`: Fungsi utama untuk membuka atau membuat file database `main.db`.
+        -   `db.execAsync`: Menjalankan migrasi skema database. Membuat tabel-tabel seperti `pelanggan`, `paket`, `transaksi`, `kategori`, dll., jika belum ada. Menggunakan `PRAGMA foreign_keys=ON` untuk memastikan integritas data.
+
+-   **`database/operasi/kategori-operasi.ts`**:
+    -   **Kegunaan**: Menyediakan sekumpulan fungsi (CRUD - Create, Read, Update, Delete) untuk berinteraksi dengan tabel `kategori`.
+    -   **Fungsi**:
+        -   `getAll()`: Mengambil semua kategori.
+        -   `getByType(...)`: Mengambil kategori berdasarkan tipe ('Pemasukan' atau 'Pengeluaran').
+        -   `create(...)`: Menyimpan record kategori baru.
+        -   `update(...)`: Memperbarui record kategori yang ada.
+        -   `delete(...)`: Menghapus record kategori.
+    -   **Struktur serupa juga berlaku untuk file operasi lainnya**: `pelanggan-operasi.ts`, `paket-operasi.ts`, dll.
+
+### 3.4. `hooks` (Logika Kustom)
+
+-   **`hooks/use-theme-color.ts`**:
+    -   **Kegunaan**: Hook kustom untuk mendapatkan warna spesifik berdasarkan tema aplikasi yang sedang aktif (terang atau gelap). Membantu menjaga konsistensi warna di seluruh aplikasi.
+
+-   **`hooks/hitung-tanggal-berakhir.ts`**:
+    -   **Kegunaan**: Menyediakan fungsi `hitungTanggalBerakhir` yang menghitung tanggal kedaluwarsa berdasarkan tanggal mulai dan durasi paket. Logika bisnis penting untuk status pelanggan.
+
+-   **`hooks/status-pelanggan.ts`**:
+    -   **Kegunaan**: Menentukan status pelanggan (`Aktif`, `Akan Segera Berakhir`, `Tidak Aktif`) berdasarkan tanggal berakhir langganan mereka.
+
+### 3.5. `utils` (Fungsi Utilitas)
+
+-   **`utils/format/format-angka.ts`**:
+    -   **Kegunaan**: Mengubah angka menjadi format mata uang Rupiah (misalnya, `10000` menjadi `Rp 10.000`).
+-   **`utils/format/format-tanggal.ts`**:
+    -   **Kegunaan**: Mengubah objek `Date` atau string tanggal menjadi format yang lebih mudah dibaca (misalnya, `dd MMM yyyy`).
+
+---

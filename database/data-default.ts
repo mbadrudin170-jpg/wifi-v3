@@ -4,11 +4,11 @@
 
 import { type SQLiteDatabase } from 'expo-sqlite';
 
-// Tambahkan parameter 'db' agar tidak error saat dipanggil di _layout.tsx
 export const insertDefaultData = async (db: SQLiteDatabase) => {
   await db.withTransactionAsync(async () => {
+    // Koreksi: Cek tabel 'kategori' yang lebih mendasar untuk mencegah seeding parsial.
     const result = await db.getFirstAsync<{ total: number }>(
-      'SELECT COUNT(*) as total FROM pelanggan'
+      'SELECT COUNT(*) as total FROM kategori'
     );
 
     if (result && result.total > 0) {
@@ -18,13 +18,64 @@ export const insertDefaultData = async (db: SQLiteDatabase) => {
 
     console.log('Memasukkan data default lengkap...');
 
-    // KATEGORI & DOMPET
+    // === KATEGORI, SUB-KATEGORI & DOMPET ===
+    console.log('Memasukkan data kategori, sub-kategori, dan dompet...');
+
+    // Kategori
     await db.runAsync(
       "INSERT INTO kategori (nama, tipe, ikon) VALUES ('Pendapatan WiFi', 'Pemasukan', 'wifi')"
     );
     await db.runAsync(
-      "INSERT INTO kategori (nama, tipe, ikon) VALUES ('Listrik & Operasional', 'Pengeluaran', 'zap')"
+      "INSERT INTO kategori (nama, tipe, ikon) VALUES ('Penjualan Aset', 'Pemasukan', 'archive')"
     );
+    await db.runAsync(
+      "INSERT INTO kategori (nama, tipe, ikon) VALUES ('Operasional', 'Pengeluaran', 'settings')"
+    );
+    await db.runAsync(
+      "INSERT INTO kategori (nama, tipe, ikon) VALUES ('Gaji & SDM', 'Pengeluaran', 'users')"
+    );
+
+    // Ambil ID Kategori yang baru dibuat untuk relasi
+    const pendapatanWifi = await db.getFirstAsync<{ id: number }>(
+      "SELECT id FROM kategori WHERE nama = 'Pendapatan WiFi'"
+    );
+    const operasional = await db.getFirstAsync<{ id: number }>(
+      "SELECT id FROM kategori WHERE nama = 'Operasional'"
+    );
+
+    if (!pendapatanWifi || !operasional) {
+      console.error('Gagal mengambil ID kategori utama untuk seeding sub-kategori.');
+      return;
+    }
+
+    // Sub-Kategori (BARU)
+    await db.runAsync(
+      "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Iuran Bulanan', ?)",
+      pendapatanWifi.id
+    );
+    await db.runAsync(
+      "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Instalasi Baru', ?)",
+      pendapatanWifi.id
+    );
+    await db.runAsync(
+      "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Upgrade Paket', ?)",
+      pendapatanWifi.id
+    );
+
+    await db.runAsync(
+      "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Tagihan Listrik', ?)",
+      operasional.id
+    );
+    await db.runAsync(
+      "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Pembelian Alat', ?)",
+      operasional.id
+    );
+    await db.runAsync(
+      "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Transportasi', ?)",
+      operasional.id
+    );
+
+    // Dompet
     await db.runAsync("INSERT INTO dompet (nama, saldo) VALUES ('Kas Usaha', 0)");
     await db.runAsync("INSERT INTO dompet (nama, saldo) VALUES ('Bank', 0)");
 
@@ -66,16 +117,16 @@ export const insertDefaultData = async (db: SQLiteDatabase) => {
     const dompet = await db.getFirstAsync<{ id: number }>(
       "SELECT id FROM dompet WHERE nama = 'Kas Usaha'"
     );
-    const kategori = await db.getFirstAsync<{ id: number }>(
-      "SELECT id FROM kategori WHERE nama = 'Pendapatan WiFi'"
+    const subKategoriIuran = await db.getFirstAsync<{ id: number; kategori_id: number }>(
+      "SELECT id, kategori_id FROM sub_kategori WHERE nama = 'Iuran Bulanan'"
     );
 
-    if (!dompet || !kategori) {
-      console.error('Dompet atau Kategori default tidak ditemukan!');
+    if (!dompet || !subKategoriIuran) {
+      console.error('Data master (dompet, sub-kategori) untuk transaksi tidak ditemukan!');
       return; // Hentikan proses jika data master tidak ada
     }
 
-    // JADIKAN PELANGGAN AKTIF, BERI PAKET, DAN BUAT TRANSAKSI
+    // JADIKAN PELANGGAN AKTIF & BUAT TRANSAKSI
     console.log('Menjadikan pelanggan aktif, memberi paket, dan membuat transaksi...');
     const semuaPelanggan = await db.getAllAsync<{ id: number; nama: string }>(
       'SELECT id, nama FROM pelanggan'
@@ -101,20 +152,21 @@ export const insertDefaultData = async (db: SQLiteDatabase) => {
         [pelanggan.id, paketDiberikan.id, tanggalMulai.toISOString(), tanggalBerakhir.toISOString()]
       );
 
-      // 2. Buat Transaksi Pembayaran Awal
+      // 2. Buat Transaksi Pembayaran Awal (dengan sub-kategori)
       await db.runAsync(
         `INSERT INTO transaksi 
-          (deskripsi, id_dompet, id_kategori, id_pelanggan, id_paket, jumlah, tipe, catatan, tanggal)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (deskripsi, id_dompet, id_kategori, id_sub_kategori, id_pelanggan, id_paket, jumlah, tipe, catatan, tanggal)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, // Tambah kolom id_sub_kategori
         [
-          `Pembayaran paket ${paketDiberikan.nama} oleh ${pelanggan.nama}`,
+          `Iuran paket ${paketDiberikan.nama} oleh ${pelanggan.nama}`,
           dompet.id,
-          kategori.id,
+          subKategoriIuran.kategori_id, // -> id dari 'Pendapatan WiFi'
+          subKategoriIuran.id, // -> id dari 'Iuran Bulanan'
           pelanggan.id,
           paketDiberikan.id,
           paketDiberikan.harga,
           'Pemasukan',
-          'Pembayaran awal saat pendaftaran.',
+          'Pembayaran iuran bulanan pertama.',
           tanggalMulai.toISOString(),
         ]
       );

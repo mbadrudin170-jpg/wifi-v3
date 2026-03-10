@@ -10,6 +10,7 @@ const MAPPING = {
   'banknote.fill': 'payments', // Ikon yang lebih cocok untuk Transaksi
   'paperplane.fill': 'send',
   'chevron.right': 'chevron-right',
+  'rectangle.stack.fill': 'menu-book',
 } as const;
 
 type IconSymbolName = keyof typeof MAPPING;

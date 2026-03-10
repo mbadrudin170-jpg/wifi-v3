@@ -4,6 +4,7 @@ import ModalDropDown from '@/components/modal/modal';
 import { TombolKembali, TombolSimpan } from '@/components/tombol';
 import { Dompet, operasiDompet } from '@/database/operasi/dompet-operasi';
 import { Kategori, operasiKategori } from '@/database/operasi/kategori-operasi';
+import { SubKategori, operasiSubKategori } from '@/database/operasi/sub-kategori-operasi';
 import { useDateTime } from '@/hooks/ambil-tanggal-dan-waktu-terbaru';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -23,27 +24,24 @@ export default function FormTransaksi() {
   // State untuk data dari database
   const [dompetList, setDompetList] = useState<Dompet[]>([]);
   const [kategoriDbList, setKategoriDbList] = useState<Kategori[]>([]);
+  const [subKategoriDbList, setSubKategoriDbList] = useState<SubKategori[]>([]);
 
-  // State untuk modal
+  // State untuk modal dan item terpilih
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState<'dompetAsal' | 'dompetTujuan' | 'kategori'>(
-    'dompetAsal'
-  );
-  const [selectedDompetAsal, setSelectedDompetAsal] = useState('');
-  const [selectedDompetTujuan, setSelectedDompetTujuan] = useState('');
-  const [selectedKategori, setSelectedKategori] = useState('');
+  const [modalType, setModalType] = useState<
+    'dompetAsal' | 'dompetTujuan' | 'kategori' | 'subKategori'
+  >('dompetAsal');
+  const [selectedDompetAsal, setSelectedDompetAsal] = useState<Dompet | null>(null);
+  const [selectedDompetTujuan, setSelectedDompetTujuan] = useState<Dompet | null>(null);
+  const [selectedKategori, setSelectedKategori] = useState<Kategori | null>(null);
+  const [selectedSubKategori, setSelectedSubKategori] = useState<SubKategori | null>(null);
 
   const db = useSQLiteContext();
 
   // Mengambil data dompet saat layar dibuka
   useFocusEffect(
     useCallback(() => {
-      async function loadDompets() {
-        const dompetOps = operasiDompet(db);
-        const result = await dompetOps.getAll();
-        setDompetList(result);
-      }
-      loadDompets();
+      operasiDompet(db).getAll().then(setDompetList);
     }, [db])
   );
 
@@ -52,18 +50,32 @@ export default function FormTransaksi() {
     async function loadKategori() {
       if (jenisTransaksi === 'pemasukan' || jenisTransaksi === 'pengeluaran') {
         const tipeKategori = jenisTransaksi === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran';
-        const kategoriOps = operasiKategori(db);
-        const result = await kategoriOps.getByType(tipeKategori);
+        const result = await operasiKategori(db).getByType(tipeKategori);
         setKategoriDbList(result);
       } else {
-        setKategoriDbList([]); // Kosongkan jika tipe transfer
+        setKategoriDbList([]);
       }
-      // Reset pilihan kategori saat jenis transaksi berubah
-      setSelectedKategori('');
+      // Reset pilihan saat jenis transaksi berubah
+      setSelectedKategori(null);
+      setSelectedSubKategori(null);
     }
-
     loadKategori();
   }, [jenisTransaksi, db]);
+
+  // Mengambil data sub-kategori berdasarkan kategori yang dipilih
+  useEffect(() => {
+    async function loadSubKategori() {
+      if (selectedKategori) {
+        const result = await operasiSubKategori(db).getByKategoriId(selectedKategori.id);
+        setSubKategoriDbList(result);
+      } else {
+        setSubKategoriDbList([]);
+      }
+      // Reset pilihan sub-kategori saat kategori berubah
+      setSelectedSubKategori(null);
+    }
+    loadSubKategori();
+  }, [selectedKategori, db]);
 
   const handleSimpan = () => {
     console.log({
@@ -73,35 +85,40 @@ export default function FormTransaksi() {
       catatan,
       tanggal,
       jam,
-      dompetAsal: selectedDompetAsal,
-      dompetTujuan: selectedDompetTujuan,
-      kategori: selectedKategori,
+      dompetAsal: selectedDompetAsal?.nama,
+      dompetTujuan: selectedDompetTujuan?.nama,
+      kategori: selectedKategori?.nama,
+      subKategori: selectedSubKategori?.nama,
     });
     router.back();
   };
 
-  const openModal = (type: 'dompetAsal' | 'dompetTujuan' | 'kategori') => {
+  const openModal = (type: 'dompetAsal' | 'dompetTujuan' | 'kategori' | 'subKategori') => {
     setModalType(type);
     setModalVisible(true);
   };
 
-  const handleSelectItem = (item: Dompet | Kategori) => {
-    const itemName = item.nama;
+  const handleSelectItem = (item: Dompet | Kategori | SubKategori) => {
     switch (modalType) {
       case 'dompetAsal':
-        setSelectedDompetAsal(itemName);
-        if (itemName === selectedDompetTujuan) {
-          setSelectedDompetTujuan('');
+        const newDompetAsal = item as Dompet;
+        setSelectedDompetAsal(newDompetAsal);
+        if (newDompetAsal.id === selectedDompetTujuan?.id) {
+          setSelectedDompetTujuan(null);
         }
         break;
       case 'dompetTujuan':
-        setSelectedDompetTujuan(itemName);
-        if (itemName === selectedDompetAsal) {
-          setSelectedDompetAsal('');
+        const newDompetTujuan = item as Dompet;
+        setSelectedDompetTujuan(newDompetTujuan);
+        if (newDompetTujuan.id === selectedDompetAsal?.id) {
+          setSelectedDompetAsal(null);
         }
         break;
       case 'kategori':
-        setSelectedKategori(itemName);
+        setSelectedKategori(item as Kategori);
+        break;
+      case 'subKategori':
+        setSelectedSubKategori(item as SubKategori);
         break;
     }
     setModalVisible(false);
@@ -114,36 +131,40 @@ export default function FormTransaksi() {
   const getModalData = () => {
     switch (modalType) {
       case 'dompetAsal':
-        return dompetList.filter((d) => d.nama !== selectedDompetTujuan);
+        return dompetList.filter((d) => d.id !== selectedDompetTujuan?.id);
       case 'dompetTujuan':
-        return dompetList.filter((d) => d.nama !== selectedDompetAsal);
+        return dompetList.filter((d) => d.id !== selectedDompetAsal?.id);
       case 'kategori':
         return kategoriDbList;
+      case 'subKategori':
+        return subKategoriDbList;
       default:
         return [];
     }
   };
 
-  const renderModalItem = ({ item }: { item: Dompet | Kategori }) => {
-    const itemName = item.nama;
-    let selectedValue = '';
+  const renderModalItem = ({ item }: { item: Dompet | Kategori | SubKategori }) => {
+    let selectedId: number | null = null;
     switch (modalType) {
       case 'dompetAsal':
-        selectedValue = selectedDompetAsal;
+        selectedId = selectedDompetAsal?.id ?? null;
         break;
       case 'dompetTujuan':
-        selectedValue = selectedDompetTujuan;
+        selectedId = selectedDompetTujuan?.id ?? null;
         break;
       case 'kategori':
-        selectedValue = selectedKategori;
+        selectedId = selectedKategori?.id ?? null;
+        break;
+      case 'subKategori':
+        selectedId = selectedSubKategori?.id ?? null;
         break;
     }
-    const isSelected = itemName === selectedValue;
+    const isSelected = item.id === selectedId;
 
     return (
       <Pressable style={styles.modalItem} onPress={() => handleSelectItem(item)}>
         <Text style={[styles.modalItemText, isSelected && styles.modalItemTextSelected]}>
-          {itemName}
+          {item.nama}
         </Text>
         {isSelected && <MaterialIcons name='check' size={22} color='#2563EB' />}
       </Pressable>
@@ -161,7 +182,6 @@ export default function FormTransaksi() {
         >
           <Text style={[styles.jenisText, isPemasukan && styles.jenisTextActive]}>Pemasukan</Text>
         </Pressable>
-
         <Pressable
           style={[styles.jenisButton, isPengeluaran && styles.jenisButtonActive]}
           onPress={() => setJenisTransaksi('pengeluaran')}
@@ -170,7 +190,6 @@ export default function FormTransaksi() {
             Pengeluaran
           </Text>
         </Pressable>
-
         <Pressable
           style={[styles.jenisButton, isTransfer && styles.jenisButtonActive]}
           onPress={() => setJenisTransaksi('transfer')}
@@ -189,7 +208,6 @@ export default function FormTransaksi() {
             <MaterialIcons name='calendar-today' size={20} color='#666' />
             <Text style={styles.dateTimeText}>{tanggal}</Text>
           </Pressable>
-
           <Pressable style={styles.timeButton}>
             <MaterialIcons name='lock-clock' size={20} color='#666' />
             <Text style={styles.dateTimeText}>{jam}</Text>
@@ -203,7 +221,6 @@ export default function FormTransaksi() {
             onChangeText={setKeterangan}
             placeholder='Masukkan keterangan'
           />
-
           <InputTeks
             label='Jumlah'
             value={jumlah}
@@ -220,27 +237,11 @@ export default function FormTransaksi() {
                   selectedDompetAsal && styles.dropdownButtonTextSelected,
                 ]}
               >
-                {selectedDompetAsal || (isTransfer ? 'Pilih Dompet Asal' : 'Pilih Dompet')}
+                {selectedDompetAsal?.nama || (isTransfer ? 'Pilih Dompet Asal' : 'Pilih Dompet')}
               </Text>
               <MaterialIcons name='arrow-drop-down' size={24} color='#666' />
             </Pressable>
           </View>
-
-          {!isTransfer && (
-            <View style={styles.dropdownContainer}>
-              <Pressable style={styles.dropdownButton} onPress={() => openModal('kategori')}>
-                <Text
-                  style={[
-                    styles.dropdownButtonText,
-                    selectedKategori && styles.dropdownButtonTextSelected,
-                  ]}
-                >
-                  {selectedKategori || 'Pilih Kategori'}
-                </Text>
-                <MaterialIcons name='arrow-drop-down' size={24} color='#666' />
-              </Pressable>
-            </View>
-          )}
 
           {isTransfer && (
             <View style={styles.dropdownContainer}>
@@ -251,11 +252,45 @@ export default function FormTransaksi() {
                     selectedDompetTujuan && styles.dropdownButtonTextSelected,
                   ]}
                 >
-                  {selectedDompetTujuan || 'Pilih Dompet Tujuan'}
+                  {selectedDompetTujuan?.nama || 'Pilih Dompet Tujuan'}
                 </Text>
                 <MaterialIcons name='arrow-drop-down' size={24} color='#666' />
               </Pressable>
             </View>
+          )}
+
+          {!isTransfer && (
+            <>
+              <View style={styles.dropdownContainer}>
+                <Pressable style={styles.dropdownButton} onPress={() => openModal('kategori')}>
+                  <Text
+                    style={[
+                      styles.dropdownButtonText,
+                      selectedKategori && styles.dropdownButtonTextSelected,
+                    ]}
+                  >
+                    {selectedKategori?.nama || 'Pilih Kategori'}
+                  </Text>
+                  <MaterialIcons name='arrow-drop-down' size={24} color='#666' />
+                </Pressable>
+              </View>
+
+              {selectedKategori && subKategoriDbList.length > 0 && (
+                <View style={styles.dropdownContainer}>
+                  <Pressable style={styles.dropdownButton} onPress={() => openModal('subKategori')}>
+                    <Text
+                      style={[
+                        styles.dropdownButtonText,
+                        selectedSubKategori && styles.dropdownButtonTextSelected,
+                      ]}
+                    >
+                      {selectedSubKategori?.nama || 'Pilih Sub-Kategori'}
+                    </Text>
+                    <MaterialIcons name='arrow-drop-down' size={24} color='#666' />
+                  </Pressable>
+                </View>
+              )}
+            </>
           )}
 
           <InputTeks
@@ -275,13 +310,7 @@ export default function FormTransaksi() {
       <ModalDropDown
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        title={
-          modalType === 'dompetAsal'
-            ? 'Pilih Dompet Asal'
-            : modalType === 'dompetTujuan'
-              ? 'Pilih Dompet Tujuan'
-              : 'Pilih Kategori'
-        }
+        title={`Pilih ${modalType.replace(/([A-Z])/g, ' $1')}`}
         data={getModalData()}
         renderItem={renderModalItem}
         position='bottom'
