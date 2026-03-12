@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
   rightAccessory: {
+    flexDirection: 'row',
     alignItems: 'flex-end',
   },
 });

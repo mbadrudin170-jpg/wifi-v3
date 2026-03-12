@@ -1,4 +1,4 @@
-// path: database/operasi/transaksi-operasi.ts
+// Path: ~/wifi-v3/database/operasi/transaksi-operasi.ts
 
 import { type SQLiteBindValue, type SQLiteDatabase, type SQLiteRunResult } from 'expo-sqlite';
 
@@ -60,7 +60,38 @@ export const operasiTransaksi = (db: SQLiteDatabase) => ({
     }
   },
 
-  async ambilSemuaLengkap(): Promise<TransaksiLengkap[]> {
+  async update(id: number, transaksi: Partial<TransaksiBaru>): Promise<SQLiteRunResult> {
+    const query = `
+      UPDATE transaksi SET
+        deskripsi = ?, jumlah = ?, tipe = ?, catatan = ?, tanggal = ?, jam = ?,
+        id_kategori = ?, id_sub_kategori = ?, id_dompet = ?, id_pelanggan = ?, id_paket = ?
+      WHERE id = ?;
+    `;
+
+    const params: SQLiteBindValue[] = [
+      transaksi.deskripsi ?? null,
+      transaksi.jumlah ?? null,
+      transaksi.tipe ?? null,
+      transaksi.catatan ?? null,
+      transaksi.tanggal ?? null,
+      transaksi.jam ?? null,
+      transaksi.id_kategori ?? null,
+      transaksi.id_sub_kategori ?? null,
+      transaksi.id_dompet ?? null,
+      transaksi.id_pelanggan ?? null,
+      transaksi.id_paket ?? null,
+      id,
+    ];
+
+    try {
+      return await db.runAsync(query, params);
+    } catch (error) {
+      console.error(`Gagal memperbarui transaksi dengan id: ${id}`, error);
+      throw error;
+    }
+  },
+
+  async ambilSemuaLengkap(limit?: number): Promise<TransaksiLengkap[]> {
     const query = `
       SELECT
         t.*,
@@ -77,10 +108,12 @@ export const operasiTransaksi = (db: SQLiteDatabase) => ({
       LEFT JOIN pelanggan p ON t.id_pelanggan = p.id
       LEFT JOIN paket pk ON t.id_paket = pk.id
       ORDER BY t.tanggal DESC, t.id DESC
+      ${limit ? 'LIMIT ?' : ''}
     `;
 
     try {
-      return await db.getAllAsync<TransaksiLengkap>(query);
+      const params = limit ? [limit] : [];
+      return await db.getAllAsync<TransaksiLengkap>(query, params);
     } catch (error) {
       console.error('Gagal mengambil data transaksi lengkap:', error);
       throw error;
@@ -113,6 +146,17 @@ export const operasiTransaksi = (db: SQLiteDatabase) => ({
       return transaksi ?? null;
     } catch (error) {
       console.error(`Gagal mengambil detail transaksi: ${id}`, error);
+      throw error;
+    }
+  },
+
+  async hapusById(id: number | string): Promise<SQLiteRunResult> {
+    try {
+      return await db.runAsync('DELETE FROM transaksi WHERE id = ?;', [
+        typeof id === 'string' ? parseInt(id, 10) : id,
+      ]);
+    } catch (error) {
+      console.error(`Gagal menghapus transaksi id: ${id}`, error);
       throw error;
     }
   },
@@ -166,3 +210,4 @@ export const operasiTransaksi = (db: SQLiteDatabase) => ({
     }
   },
 });
+('');

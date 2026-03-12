@@ -1,6 +1,7 @@
 // path: app/(tabs)/transaksi.tsx
 // File Screen untuk manajemen Transaksi WiFi dengan teks loading.
 
+import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import { TombolHapus } from '@/components/tombol';
 import TombolTambah from '@/components/tombol/tombol-tambah';
 import { operasiTransaksi, TransaksiLengkap } from '@/database/operasi/transaksi-operasi';
@@ -11,7 +12,6 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TransaksiScreen() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export default function TransaksiScreen() {
     setIsLoading(true);
     try {
       const [data, total, totalKeuangan] = await Promise.all([
-        operasiTransaksi(db).ambilSemuaLengkap(),
+        operasiTransaksi(db).ambilSemuaLengkap(50), // HANYA AMBIL 50 TERBARU
         operasiTransaksi(db).hitungTotalTransaksi(),
         operasiTransaksi(db).hitungPemasukanPengeluaran(),
       ]);
@@ -156,8 +156,15 @@ export default function TransaksiScreen() {
         <Text>{item.nama_dompet}</Text>
       </View>
       <View style={styles.wadahKanan}>
-        <Text>{formatRupiah(item.jumlah || 0)}</Text>
-        <Text>{item.jam}</Text>
+        <Text
+          style={[
+            styles.jumlahTransaksi,
+            item.tipe === 'pengeluaran' ? styles.jumlahPengeluaran : styles.jumlahPemasukan,
+          ]}
+        >
+          {formatRupiah(item.jumlah || 0)}
+        </Text>
+        <Text style={styles.jam}>{item.jam}</Text>
       </View>
     </Pressable>
   );
@@ -165,17 +172,15 @@ export default function TransaksiScreen() {
   const totalAkhir = totalPemasukan - totalPengeluaran;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaViewCustom>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Riwayat Transaksi</Text>
           <Text style={styles.subtitle}>{totalTransaksi} Total Catatan</Text>
         </View>
-
         <TombolHapus onPress={handleHapusSemua} />
       </View>
 
-      {/* -- Ringkasan Saldo -- */}
       <View style={styles.wadahRingkasanSaldo}>
         <View style={[styles.wadahTipe, styles.pemasukanBorder]}>
           <Text style={styles.teksTipe}>Pemasukan</Text>
@@ -203,6 +208,7 @@ export default function TransaksiScreen() {
       </View>
 
       {isLoading ? (
+        // TAMPILKAN INI SAAT LOADING
         <View style={styles.centerLoader}>
           <Text style={styles.loadingText}>Memuat data transaksi...</Text>
         </View>
@@ -226,7 +232,7 @@ export default function TransaksiScreen() {
       )}
 
       <TombolTambah onPress={() => router.push('/form/form-transaksi')} />
-    </SafeAreaView>
+    </SafeAreaViewCustom>
   );
 }
 
@@ -472,5 +478,12 @@ const styles = StyleSheet.create({
   },
   statusTextPengeluaran: {
     color: '#C62828',
+  },
+  jumlahTransaksi: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  jam: {
+    fontSize: 12,
   },
 });

@@ -38,7 +38,7 @@ export default function DetailLayout() {
       <Stack.Screen
         name='detail-transaksi/[id]'
         options={{
-          title: 'Detail Transaksi',
+          headerShown: false,
         }}
       />
 

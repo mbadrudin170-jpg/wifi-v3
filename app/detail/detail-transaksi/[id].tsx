@@ -1,14 +1,16 @@
 // path: app/detail/detail-transaksi/[id].tsx
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/theme';
 // PERBAIKAN: Impor fungsi operasiTransaksi
+import HeaderCustom from '@/components/header/header-custom';
+import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
+import { TombolEdit, TombolHapus, TombolKembali } from '@/components/tombol';
 import { operasiTransaksi, TransaksiLengkap } from '@/database/operasi/transaksi-operasi';
 import { formatAngka } from '@/utils/format/format-angka';
 import { formatTanggal } from '@/utils/format/format-tanggal';
@@ -63,16 +65,62 @@ export default function DetailTransaksiScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Detail Transaksi',
-          headerShadowVisible: false,
-        }}
-      />
+  const handleEdit = () => {
+    if (data?.id) {
+      router.push({
+        pathname: '/form/form-transaksi',
+        params: { id: data.id },
+      });
+    }
+  };
 
+  // --- TAMBAHKAN FUNGSI INI ---
+  const handleHapus = () => {
+    if (!data?.id) return;
+
+    // Tampilkan dialog konfirmasi sebelum menghapus
+    Alert.alert(
+      'Konfirmasi Hapus',
+      'Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.',
+      [
+        // Tombol Batal
+        {
+          text: 'Batal',
+          style: 'cancel',
+        },
+        // Tombol Hapus
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Panggil fungsi hapus dari operasiTransaksi
+              await operasiTransaksi(db).hapusById(data.id);
+              Alert.alert('Sukses', 'Transaksi berhasil dihapus.');
+              router.back(); // Kembali ke layar sebelumnya setelah berhasil
+            } catch (error) {
+              console.error('Gagal menghapus transaksi:', error);
+              Alert.alert('Error', 'Terjadi kesalahan saat menghapus transaksi.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <SafeAreaViewCustom>
+      <HeaderCustom
+        leftAccessory={<TombolKembali />}
+        rightAccessory={
+          <>
+            <TombolEdit onPress={handleEdit} />
+            <TombolHapus onPress={handleHapus} />
+          </>
+        }
+      >
+        <Text style={styles.teksHeader}>Detail Transaksi</Text>
+      </HeaderCustom>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.headerCard}>
           <Text style={styles.labelHeader}>Nominal Transaksi</Text>
@@ -83,9 +131,6 @@ export default function DetailTransaksiScreen() {
               data?.tipe === 'pengeluaran' ? styles.teksMerah : styles.teksHijau,
             ]}
           >
-            {/* PERBAIKAN: Logika +/- disesuaikan */}
-            {data?.tipe === 'pemasukan' ? '+ ' : '- '}
-            {/* PERBAIKAN: Gunakan properti 'jumlah' */}
             {formatAngka(data?.jumlah || 0)}
           </Text>
           <View
@@ -107,14 +152,10 @@ export default function DetailTransaksiScreen() {
             value={data?.tanggal ? formatTanggal(new Date(data.tanggal)) : '-'}
             ikon='event'
           />
-          <ItemDetail
-            label='Kategori'
-            value={data?.nama_kategori || 'Tanpa Kategori'}
-            ikon='category'
-          />
+          <ItemDetail label='Kategori' value={data?.nama_kategori || '-'} ikon='category' />
           <ItemDetail
             label='Sumber Dana / Dompet'
-            value={data?.nama_dompet || 'Kas'}
+            value={data?.nama_dompet || '-'}
             ikon='account-balance-wallet'
           />
         </View>
@@ -122,8 +163,8 @@ export default function DetailTransaksiScreen() {
         {data?.id_pelanggan && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Data Pelanggan & Paket</Text>
-            <ItemDetail label='Nama Pelanggan' value={data.nama_pelanggan} ikon='person' />
-            <ItemDetail label='Paket WiFi' value={data.nama_paket} ikon='wifi' />
+            <ItemDetail label='Nama Pelanggan' value={data?.nama_pelanggan || '-'} ikon='person' />
+            <ItemDetail label='Paket WiFi' value={data?.nama_paket || '-'} ikon='wifi' />
           </View>
         )}
 
@@ -136,7 +177,7 @@ export default function DetailTransaksiScreen() {
           ID Transaksi: {data?.id} • Dibuat: {data?.dibuat}
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaViewCustom>
   );
 }
 
@@ -189,6 +230,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+  },
+  teksHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
   },
   textWrapper: { flex: 1 },
   labelItem: { fontSize: 12, color: '#888' },
