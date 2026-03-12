@@ -1,8 +1,11 @@
 ## Aturan untuk Aisten
 
-1. tunjukan ke saya kode mana yang error dan kode yang harus di perbaiki
 2. kalau ada error tolong jelaskan kenapa bisa terjadi error.
 3. selalu tambahkan jalur path di bagian paling atas dari sebuah isi file.
 4. selalu menjaga konsistensi dan standar penulisan kode.
 5. saya ingin semua logika dan fungsi saya harus tahu kegunaannya.
-6. setelah melakukan perubahan perbaiki file README.md nya juga
+6. tolong tunjukan ke saya baris ke berapa dalam kode yang harus saya perbaiki.
+7. kalau saya minta kerjakan maka kamu harus kerjakan.
+8. setiap saya memberikan pertanyaan tolong kamu baca dahulu file nya karena pasti ada perubahan yang telah saya lakukan jangan ambil dari memori kamu.
+9. cukup tunjukan kode yang harus saya perbaiki dan kode yang benar karena saya ingin sambil belajar.
+10. bantu saya agar bisa mahir dalam react expo.

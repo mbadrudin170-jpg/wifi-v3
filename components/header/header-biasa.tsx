@@ -12,10 +12,11 @@ export default function HeaderBiasa({ children, style }: HeaderBiasaProps) {
 
 const styles = StyleSheet.create({
   container: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 15,
+    paddingHorizontal:6,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#ccc',
     backgroundColor: '#fff',

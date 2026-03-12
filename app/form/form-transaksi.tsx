@@ -5,12 +5,26 @@ import { TombolKembali, TombolSimpan } from '@/components/tombol';
 import { Dompet, operasiDompet } from '@/database/operasi/dompet-operasi';
 import { Kategori, operasiKategori } from '@/database/operasi/kategori-operasi';
 import { SubKategori, operasiSubKategori } from '@/database/operasi/sub-kategori-operasi';
-import { useDateTime } from '@/hooks/ambil-tanggal-dan-waktu-terbaru';
+import { operasiTransaksi } from '@/database/operasi/transaksi-operasi';
+import { formatAngka } from '@/utils/format/format-angka';
+import { formatJam } from '@/utils/format/format-jam';
+import { formatTanggal } from '@/utils/format/format-tanggal';
 import { MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Alert,
+  Keyboard,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import InputTeks from '../../components/komponen-react/input-teks';
 import SafeAreaViewCustom from '../../components/komponen-react/safe-area-view-custom';
 
@@ -19,7 +33,13 @@ export default function FormTransaksi() {
   const [jumlah, setJumlah] = useState('');
   const [catatan, setCatatan] = useState('');
   const [jenisTransaksi, setJenisTransaksi] = useState('pemasukan');
-  const { tanggal, jam } = useDateTime();
+  const [date, setDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerMode, setPickerMode] = useState<'date' | 'time'>('date');
+
+  // Refs untuk input
+  const keteranganRef = useRef<TextInput>(null);
+  const jumlahRef = useRef<TextInput>(null);
 
   // State untuk data dari database
   const [dompetList, setDompetList] = useState<Dompet[]>([]);
@@ -77,20 +97,99 @@ export default function FormTransaksi() {
     loadSubKategori();
   }, [selectedKategori, db]);
 
-  const handleSimpan = () => {
-    console.log({
-      jenisTransaksi,
-      keterangan,
-      jumlah,
-      catatan,
-      tanggal,
-      jam,
-      dompetAsal: selectedDompetAsal?.nama,
-      dompetTujuan: selectedDompetTujuan?.nama,
-      kategori: selectedKategori?.nama,
-      subKategori: selectedSubKategori?.nama,
-    });
-    router.back();
+  const handleJumlahChange = (text: string) => {
+    const rawValue = text.replace(/[^0-9]/g, '');
+    setJumlah(rawValue);
+  };
+
+  const handleSimpan = async () => {
+    const isTransfer = jenisTransaksi === 'transfer';
+    const jumlahAngka = parseFloat(jumlah); // Konversi dari string angka murni
+
+    // --- Validasi Input ---
+    if (!keterangan.trim()) {
+      Alert.alert('Input Tidak Valid', 'Keterangan transaksi tidak boleh kosong.');
+      keteranganRef.current?.focus(); // Fokus ke input keterangan
+      return;
+    }
+    if (isNaN(jumlahAngka) || jumlahAngka <= 0) {
+      Alert.alert(
+        'Input Tidak Valid',
+        'Jumlah transaksi harus berupa angka yang valid dan lebih dari nol.'
+      );
+      jumlahRef.current?.focus(); // Fokus ke input jumlah
+      return;
+    }
+    if (!selectedDompetAsal) {
+      Alert.alert(
+        'Input Tidak Valid',
+        isTransfer ? 'Dompet asal harus dipilih.' : 'Dompet harus dipilih.'
+      );
+      return;
+    }
+    if (isTransfer && !selectedDompetTujuan) {
+      Alert.alert('Input Tidak Valid', 'Dompet tujuan harus dipilih.');
+      return;
+    }
+    if (!isTransfer && !selectedKategori) {
+      Alert.alert('Input Tidak Valid', 'Kategori transaksi harus dipilih.');
+      return;
+    }
+
+    try {
+      const tanggalISO = date.toISOString();
+      const jamFormatted = formatJam(date);
+
+      if (isTransfer) {
+        // --- Logika untuk Transfer ---
+        await operasiTransaksi(db).create({
+          deskripsi: `Transfer ke ${selectedDompetTujuan!.nama}: ${keterangan}`,
+          jumlah: jumlahAngka,
+          tipe: 'pengeluaran',
+          catatan,
+          tanggal: tanggalISO,
+          jam: jamFormatted,
+          id_kategori: null,
+          id_sub_kategori: null,
+          id_dompet: selectedDompetAsal.id,
+          id_pelanggan: null,
+        });
+        await operasiTransaksi(db).create({
+          deskripsi: `Transfer dari ${selectedDompetAsal.nama}: ${keterangan}`,
+          jumlah: jumlahAngka,
+          tipe: 'pemasukan',
+          catatan,
+          tanggal: tanggalISO,
+          jam: jamFormatted,
+
+          id_kategori: null,
+          id_sub_kategori: null,
+          id_dompet: selectedDompetTujuan!.id,
+          id_pelanggan: null,
+        });
+      } else {
+        // --- Logika untuk Pemasukan atau Pengeluaran ---
+        await operasiTransaksi(db).create({
+          deskripsi: keterangan,
+          jumlah: jumlahAngka,
+          tipe: jenisTransaksi as 'pemasukan' | 'pengeluaran',
+          catatan,
+          tanggal: tanggalISO,
+          jam: jamFormatted,
+
+          id_kategori: selectedKategori!.id,
+          id_sub_kategori: selectedSubKategori?.id || null,
+          id_dompet: selectedDompetAsal.id,
+          id_pelanggan: null,
+        });
+      }
+
+      Alert.alert('Sukses', 'Transaksi berhasil disimpan.');
+      router.back();
+    } catch (error) {
+      console.error('Gagal menyimpan transaksi:', error);
+      Alert.alert('Error', 'Terjadi kesalahan saat menyimpan transaksi.');
+    }
   };
 
   const openModal = (type: 'dompetAsal' | 'dompetTujuan' | 'kategori' | 'subKategori') => {
@@ -122,6 +221,19 @@ export default function FormTransaksi() {
         break;
     }
     setModalVisible(false);
+  };
+
+  const showPickerMode = (currentMode: 'date' | 'time') => {
+    setShowPicker(true);
+    setPickerMode(currentMode);
+  };
+
+  const onChangeDateTimePicker = (event: any, selectedDate?: Date) => {
+    const currentDate = selectedDate || date;
+    if (Platform.OS === 'android') {
+      setShowPicker(false);
+    }
+    setDate(currentDate);
   };
 
   const isTransfer = jenisTransaksi === 'transfer';
@@ -190,6 +302,7 @@ export default function FormTransaksi() {
             Pengeluaran
           </Text>
         </Pressable>
+
         <Pressable
           style={[styles.jenisButton, isTransfer && styles.jenisButtonActive]}
           onPress={() => setJenisTransaksi('transfer')}
@@ -202,31 +315,49 @@ export default function FormTransaksi() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollViewContent}
+        keyboardShouldPersistTaps='handled'
       >
         <View style={styles.dateTimeContainer}>
-          <Pressable style={styles.dateButton}>
+          <Pressable style={styles.dateButton} onPress={() => showPickerMode('date')}>
             <MaterialIcons name='calendar-today' size={20} color='#666' />
-            <Text style={styles.dateTimeText}>{tanggal}</Text>
+            <Text style={styles.dateTimeText}>{formatTanggal(date)}</Text>
           </Pressable>
-          <Pressable style={styles.timeButton}>
+          <Pressable style={styles.timeButton} onPress={() => showPickerMode('time')}>
             <MaterialIcons name='lock-clock' size={20} color='#666' />
-            <Text style={styles.dateTimeText}>{jam}</Text>
+            <Text style={styles.dateTimeText}>{formatJam(date)}</Text>
           </Pressable>
         </View>
 
+        {showPicker && (
+          <DateTimePicker
+            testID='dateTimePicker'
+            value={date}
+            mode={pickerMode}
+            is24Hour={true}
+            display='default'
+            onChange={onChangeDateTimePicker}
+          />
+        )}
+
         <View style={styles.formContainer}>
           <InputTeks
+            ref={keteranganRef}
             label='Keterangan'
             value={keterangan}
             onChangeText={setKeterangan}
             placeholder='Masukkan keterangan'
+            returnKeyType='next'
+            onSubmitEditing={() => jumlahRef.current?.focus()}
           />
           <InputTeks
+            ref={jumlahRef}
             label='Jumlah'
-            value={jumlah}
-            onChangeText={setJumlah}
+            value={formatAngka(jumlah)}
+            onChangeText={handleJumlahChange}
             placeholder='Masukkan jumlah'
             keyboardType='numeric'
+            returnKeyType='done'
+            onSubmitEditing={Keyboard.dismiss}
           />
 
           <View style={styles.dropdownContainer}>
@@ -301,6 +432,7 @@ export default function FormTransaksi() {
             multiline
             numberOfLines={3}
             textAlignVertical='top'
+            returnKeyType='done'
           />
         </View>
       </ScrollView>
@@ -319,13 +451,14 @@ export default function FormTransaksi() {
     </SafeAreaViewCustom>
   );
 }
-
 const styles = StyleSheet.create({
+  // Jenis Transaksi Section
   jenisContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
     marginBottom: 16,
+    paddingHorizontal: 16,
   },
   jenisButton: {
     flex: 1,
@@ -350,12 +483,17 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
+
+  // ScrollView Container
   scrollView: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   scrollViewContent: {
     paddingBottom: 1,
   },
+
+  // DateTime Section
   dateTimeContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -392,9 +530,13 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontWeight: '500',
   },
+
+  // Form Container
   formContainer: {
     gap: 16,
   },
+
+  // Dropdown Section
   dropdownContainer: {
     marginBottom: 4,
   },
@@ -417,6 +559,8 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontWeight: '500',
   },
+
+  // Modal Styles
   modalItem: {
     paddingVertical: 15,
     paddingHorizontal: 16,

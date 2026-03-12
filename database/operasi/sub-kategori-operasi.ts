@@ -20,9 +20,7 @@ export const operasiSubKategori = (db: SQLiteDatabase) => ({
   },
 
   async getById(id: number) {
-    return await db.getFirstAsync<SubKategori>('SELECT * FROM sub_kategori WHERE id = ?', [
-      id,
-    ]);
+    return await db.getFirstAsync<SubKategori>('SELECT * FROM sub_kategori WHERE id = ?', [id]);
   },
 
   async create(subKategori: Omit<SubKategori, 'id'>) {

@@ -93,7 +93,12 @@ export default function FormPelanggan() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nama Lengkap *</Text>
               <View style={styles.inputWrapper}>
-                <MaterialIcons name='person-outline' size={20} color={'#999'} style={styles.inputIcon} />
+                <MaterialIcons
+                  name='person-outline'
+                  size={20}
+                  color={'#999'}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={styles.input}
                   value={nama}
@@ -109,7 +114,12 @@ export default function FormPelanggan() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Nomor WhatsApp / HP</Text>
               <View style={styles.inputWrapper}>
-                <MaterialIcons name='phone-android' size={20} color={'#999'} style={styles.inputIcon} />
+                <MaterialIcons
+                  name='phone-android'
+                  size={20}
+                  color={'#999'}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   ref={refNoHp}
                   style={styles.input}
@@ -142,7 +152,12 @@ export default function FormPelanggan() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Alamat *</Text>
               <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-                <MaterialIcons name='place' size={20} color={'#999'} style={[styles.inputIcon, { marginTop: 12 }]} />
+                <MaterialIcons
+                  name='place'
+                  size={20}
+                  color={'#999'}
+                  style={[styles.inputIcon, { marginTop: 12 }]}
+                />
                 <TextInput
                   ref={refAlamat}
                   style={[styles.input, styles.textArea]}
@@ -162,19 +177,20 @@ export default function FormPelanggan() {
 
         <View style={styles.footer}>
           {/* PERBAIKAN: Menggunakan disabled dan mengubah teks saat loading */}
-          <TombolSimpan
-            teks={loading ? 'Menyimpan...' : 'Simpan Pelanggan'}
-            onPress={handleSimpan}
-            disabled={loading}
-          />
+          <TombolSimpan onPress={handleSimpan} disabled={loading} />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  // Container Utama
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+
+  // Header Section
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -184,12 +200,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1A1A1A' },
-  backButton: { padding: 8 },
-  scrollContent: { padding: 20 },
-  formContainer: { flex: 1 },
-  inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#444', marginBottom: 8, marginLeft: 4 },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+  },
+
+  // ScrollView Content
+  scrollContent: {
+    padding: 20,
+  },
+
+  // Form Container
+  formContainer: {
+    flex: 1,
+  },
+
+  // Input Group
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+
+  // Input Wrapper
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -199,10 +241,38 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     paddingHorizontal: 12,
   },
-  inputIcon: { marginRight: 10 },
-  input: { flex: 1, height: 50, fontSize: 15, color: '#333' },
-  textAreaWrapper: { alignItems: 'flex-start', minHeight: 100 },
-  textArea: { height: 90, paddingTop: 12 },
-  infoText: { fontSize: 12, color: '#999', fontStyle: 'italic' },
-  footer: { padding: 20, borderTopWidth: 1, borderTopColor: '#F0F0F0', backgroundColor: '#FFFFFF' },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    fontSize: 15,
+    color: '#333',
+  },
+
+  // TextArea Specific
+  textAreaWrapper: {
+    alignItems: 'flex-start',
+    minHeight: 100,
+  },
+  textArea: {
+    height: 90,
+    paddingTop: 12,
+  },
+
+  // Info Text
+  infoText: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+  },
+
+  // Footer
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
+  },
 });

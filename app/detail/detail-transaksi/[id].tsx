@@ -36,7 +36,7 @@ export default function DetailTransaksiScreen() {
       if (isMountedRef.current) setLoading(true);
 
       // PERBAIKAN: Menggunakan fungsi terpusat dari operasiTransaksi
-      const result = await operasiTransaksi.ambilBerdasarkanId(db, validId);
+      const result = await operasiTransaksi(db).ambilBerdasarkanId(validId);
 
       if (result) {
         if (isMountedRef.current) setData(result);

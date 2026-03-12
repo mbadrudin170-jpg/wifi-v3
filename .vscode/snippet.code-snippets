@@ -47,9 +47,9 @@
     ],
     "description": "Membuat snippet baru",
   },
-  "onpress": {
-    "prefix": "onpress",
-    "body": ["onpress={()=>$1('$2')}"],
+  "onPress": {
+    "prefix": "onPress",
+    "body": ["onPress={()=>$1('$2')}"],
     "description": "menambahkan properti onpress",
   },
   "Export Default Function": {

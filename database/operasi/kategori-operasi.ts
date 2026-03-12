@@ -26,10 +26,9 @@ export const operasiKategori = (db: SQLiteDatabase) => ({
 
   async create(kategori: Omit<Kategori, 'id'>) {
     return await db.runAsync(
-      'INSERT INTO kategori (nama, tipe, ikon) VALUES (?, ?, ?)',
+      'INSERT INTO kategori (nama, tipe) VALUES (?, ?)',
       kategori.nama,
-      kategori.tipe,
-      kategori.ikon
+      kategori.tipe
     );
   },
 

@@ -2434,3 +2434,685 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+Path: app/detail/pelanggan-aktif/[id].tsx
+
+```tsx
+// Path: /home/user/wifi-v3/app/detail/pelanggan-aktif/[id].tsx
+
+import {
+  operasiPelangganAktif,
+  type PelangganAktifDetail,
+} from '@/database/operasi/pelanggan-aktif-operasi';
+import { getStatusPelanggan } from '@/hooks/status-pelanggan';
+import { formatRupiah } from '@/utils/format/format-angka';
+import { formatTanggalAngka } from '@/utils/format/format-tanggal';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Komponen kecil untuk membuat baris detail lebih rapi
+const DetailRow = ({ label, value }: { label: string; value: string | null | undefined }) => (
+  <View style={styles.row}>
+    <Text style={styles.label}>{label}</Text>
+    <Text style={styles.value}>{value || '-'}</Text>
+  </View>
+);
+
+export default function DetailPelangganAktif() {
+  const router = useRouter();
+
+  const db = useSQLiteContext(); // Ambil instance database yang sudah dimigrasi oleh Provider
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [pelanggan, setPelanggan] = useState<PelangganAktifDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    let isCancelled = false;
+
+    const loadData = async () => {
+      try {
+        const data = await operasiPelangganAktif(db).ambilDetailPelangganAktifById(Number(id));
+        if (!isCancelled) setPelanggan(data);
+      } catch (error) {
+        console.error('Gagal mengambil detail pelanggan:', error);
+      } finally {
+        if (!isCancelled) setIsLoading(false);
+      }
+    };
+    loadData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [id, db]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size='large' />
+      </View>
+    );
+  }
+
+  if (!pelanggan) {
+    return (
+      <View style={styles.center}>
+        <Text>Pelanggan tidak ditemukan.</Text>
+      </View>
+    );
+  }
+
+  const statusInfo = getStatusPelanggan(pelanggan.tanggal_berakhir);
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* Header Kustom */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()}>
+          <MaterialIcons name='arrow-back' size={24} color='black' />
+        </Pressable>
+        <Text style={styles.headerTitle}>Detail Pelanggan</Text>
+        <Pressable>
+          <MaterialIcons name='edit' size={24} color='black' />
+        </Pressable>
+      </View>
+
+      {/* Konten Halaman */}
+      <View style={styles.content}>
+        {/* Kartu Info Dasar */}
+        <View style={styles.card}>
+          <Text style={styles.namaPelanggan}>{pelanggan.nama}</Text>
+          <Text style={styles.alamatPelanggan}>{pelanggan.alamat}</Text>
+        </View>
+
+        {/* Kartu Status Langganan */}
+        <View style={styles.card}>
+          <Text style={[styles.status, { backgroundColor: statusInfo.warna }]}>
+            {statusInfo.statusTeks}
+          </Text>
+          <DetailRow label='Sisa Masa Aktif' value={statusInfo.detailTeks} />
+          <DetailRow
+            label='Tanggal Berakhir'
+            value={formatTanggalAngka(pelanggan.tanggal_berakhir)}
+          />
+        </View>
+
+        {/* Kartu Info Paket & Kontak */}
+        <View style={styles.card}>
+          <DetailRow label='Paket Langganan' value={pelanggan.nama_paket} />
+          <DetailRow label='Harga Paket' value={formatRupiah(pelanggan.harga_paket)} />
+          <DetailRow label='Nomor HP' value={pelanggan.no_hp} />
+          <DetailRow
+            label='Mulai Berlangganan'
+            value={formatTanggalAngka(pelanggan.tanggal_mulai)}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+// Ganti StyleSheet lama Anda dengan ini
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  content: {
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  namaPelanggan: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  alamatPelanggan: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  label: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  value: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  status: {
+    alignSelf: 'flex-start',
+    color: '#fff',
+    fontWeight: 'bold',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    marginBottom: 12,
+    fontSize: 12,
+    textTransform: 'uppercase',
+  },
+});
+```
+
+Path: app/form/form-kategori.tsx
+
+```tsx
+// Path: ~/wifi-v3/app/form/form-kategori.tsx
+
+import HeaderBiasa from '@/components/header/header-biasa';
+import InputTeks from '@/components/komponen-react/input-teks';
+import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
+import ModalDropDown from '@/components/modal/modal';
+import { TombolKembali, TombolSimpan } from '@/components/tombol';
+import { Kategori, operasiKategori } from '@/database/operasi/kategori-operasi';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
+// Tipe data untuk opsi di modal
+type OpsiTipe = {
+  id: 'Pemasukan' | 'Pengeluaran';
+  nama: 'Pemasukan' | 'Pengeluaran';
+};
+
+export default function HalamanFormKategori() {
+  const router = useRouter();
+  const db = useSQLiteContext();
+  const { create } = operasiKategori(db);
+
+  const [nama, setNama] = useState('');
+  const [tipe, setTipe] = useState<'Pemasukan' | 'Pengeluaran' | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [isInputVisible, setInputVisible] = useState(false);
+
+  /**
+   * FUNGSI:
+   * Menangani proses penyimpanan data kategori baru ke database.
+   * Fungsi ini melakukan validasi input sebelum mengirim data.
+   */
+  const handleSimpan = async () => {
+    if (!nama.trim()) {
+      Alert.alert('Error', 'Nama kategori tidak boleh kosong.');
+      return;
+    }
+    if (!tipe) {
+      Alert.alert('Error', 'Tipe kategori harus dipilih.');
+      return;
+    }
+
+    try {
+      // Objek kategori yang akan disimpan
+      const kategoriBaru: Omit<Kategori, 'id'> = {
+        nama: nama.trim(),
+        tipe: tipe,
+        ikon: null, // Ikon belum diimplementasikan di form ini
+      };
+
+      await create(kategoriBaru);
+      Alert.alert('Sukses', 'Kategori berhasil disimpan.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.error('Gagal menyimpan kategori:', error);
+      Alert.alert('Error', 'Gagal menyimpan kategori.');
+    }
+  };
+
+  // Data untuk pilihan tipe di modal
+  const dataTipe: OpsiTipe[] = [
+    { id: 'Pemasukan', nama: 'Pemasukan' },
+    { id: 'Pengeluaran', nama: 'Pengeluaran' },
+  ];
+
+  /**
+   * FUNGSI:
+   * Merender setiap item pilihan tipe di dalam modal.
+   */
+  const renderItemTipe = ({ item }: { item: OpsiTipe }) => (
+    <Pressable
+      style={styles.itemModal}
+      onPress={() => {
+        setTipe(item.id);
+        setModalVisible(false);
+      }}
+    >
+      <Text style={styles.itemModalTeks}>{item.nama}</Text>
+    </Pressable>
+  );
+
+  return (
+    <SafeAreaViewCustom style={styles.container}>
+      <HeaderBiasa>
+        <TombolKembali />
+        <Text style={styles.headerTitle}>Form Kategori</Text>
+        <View style={styles.headerRight} />
+      </HeaderBiasa>
+
+      <View style={styles.wadahTombolTipe}>
+        <Pressable style={styles.tombolTipe}>
+          <Text style={styles.teksTipePemasukan}>Pemasukan</Text>
+        </Pressable>
+        <Pressable style={styles.tombolTipe}>
+          <Text style={styles.teksTipePengeluaran}>Pengeluaran</Text>
+        </Pressable>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.formContainer}>
+          {isInputVisible ? (
+            <View>
+              <InputTeks
+                label='Nama Kategori'
+                placeholder='Masukkan nama kategori'
+                value={nama}
+                onChangeText={setNama}
+              />
+              <Pressable onPress={() => setInputVisible(false)}>
+                <MaterialIcons name='close' size={24} color={'black'} />
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.wadahTombolTambah}>
+              <Pressable style={styles.tombolTambah} onPress={() => setInputVisible(true)}>
+                <Text style={styles.teksTombolTambah}>Tambah</Text>
+              </Pressable>
+            </View>
+          )}
+          <Pressable onPress={() => setModalVisible(true)} style={styles.inputDropdown}>
+            <Text style={tipe ? styles.inputDropdownTeks : styles.inputDropdownPlaceholder}>
+              {tipe || 'Pilih tipe kategori'}
+            </Text>
+            <Text style={styles.dropdownIcon}>▼</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      <View style={styles.tombolContainer}>
+        <TombolSimpan onPress={handleSimpan} />
+      </View>
+
+      <ModalDropDown
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title='Pilih Kategori'
+        data={dataTipe}
+        renderItem={renderItemTipe}
+        position='center'
+      />
+    </SafeAreaViewCustom>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    flex: 1,
+    textAlign: 'center',
+  },
+  headerRight: {
+    width: 40, // Sama dengan lebar TombolKembali untuk keseimbangan
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  formContainer: {
+    flex: 1,
+    gap: 20,
+  },
+  tombolContainer: {
+    padding: 20,
+    paddingBottom: 28,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  inputDropdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    height: 50,
+  },
+  inputDropdownTeks: {
+    fontSize: 16,
+    color: '#495057',
+  },
+  inputDropdownPlaceholder: {
+    fontSize: 16,
+    color: '#6c757d', // Warna placeholder
+  },
+  dropdownIcon: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  itemModal: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  itemModalTeks: {
+    fontSize: 16,
+    color: '#333',
+  },
+  wadahTombolTambah: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  tombolTambah: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 6,
+  },
+  teksTombolTambah: {
+    color: 'blue',
+    fontSize: 12,
+  },
+  wadahTombolTipe: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    width: '100%',
+  },
+  tombolTipe: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+  },
+  teksTipePemasukan: {
+    color: 'green',
+  },
+  teksTipePengeluaran: {
+    color: 'red',
+  },
+});
+```
+
+Path: app/form/form-paket.tsx
+
+```tsx
+// path: app/form/form-paket.tsx
+import HeaderCustom from '@/components/header/header-custom';
+import InputTeks from '@/components/komponen-react/input-teks';
+import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
+import { TombolAksi, TombolKembali } from '@/components/tombol';
+import { operasiPaket } from '@/database/operasi/paket-operasi';
+import { formatAngka } from '@/utils/format/format-angka';
+import { useRouter } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+
+// Tipe data untuk unit durasi agar lebih aman
+type UnitDurasi = 'Jam' | 'Hari' | 'Bulan';
+
+/**
+ * FUNGSI:
+ * Menyiapkan nilai durasi untuk disimpan di database.
+ * Untuk 'Bulan' dan 'Hari', kita simpan nilainya apa adanya.
+ * Untuk 'Jam', kita konversi ke hari untuk konsistensi.
+ * @param nilai - Angka durasi yang dimasukkan pengguna.
+ * @param unit - Unit durasi yang dipilih ('Jam', 'Hari', 'Bulan').
+ * @returns Nilai durasi yang akan disimpan.
+ */
+const siapkanNilaiDurasi = (nilai: number, unit: UnitDurasi): number => {
+  if (unit === 'Jam') {
+    // Jam dikonversi ke hari agar konsisten dalam satuan terkecil (selain bulan)
+    return Math.ceil(nilai / 24);
+  }
+  // Untuk 'Hari' dan 'Bulan', kita tidak melakukan konversi.
+  // Nilai dan unitnya akan disimpan secara terpisah.
+  return nilai;
+};
+
+/**
+ * FUNGSI:
+ * Halaman ini berfungsi sebagai formulir untuk menambah atau mengedit data paket internet.
+ * Pengguna dapat memasukkan detail paket seperti nama, durasi, harga, dan kecepatan.
+ * Data yang dimasukkan akan divalidasi dan disimpan ke dalam database.
+ */
+export default function HalamanFormPaket() {
+  const router = useRouter();
+  const db = useSQLiteContext();
+  const paketRepo = operasiPaket(db);
+
+  const [nama, setNama] = useState('');
+  const [harga, setHarga] = useState('');
+  const [kecepatan, setKecepatan] = useState('');
+  const [durasi, setDurasi] = useState('');
+  const [unitDurasi, setUnitDurasi] = useState<UnitDurasi>('Hari'); // Default diubah ke 'Hari' agar lebih umum
+
+  const refHarga = useRef<TextInput>(null);
+  const refKecepatan = useRef<TextInput>(null);
+  const refDurasi = useRef<TextInput>(null);
+
+  const handleHargaChange = (text: string) => {
+    const angkaMurni = text.replace(/[^0-9]/g, '');
+    setHarga(angkaMurni);
+  };
+
+  const handleSimpan = async () => {
+    if (!nama.trim() || !durasi.trim() || !harga.trim() || !kecepatan.trim()) {
+      Alert.alert('Error', 'Semua kolom harus diisi.');
+      return;
+    }
+
+    const durasiInput = parseInt(durasi, 10);
+    const hargaAngka = parseInt(harga, 10);
+    const kecepatanAngka = parseInt(kecepatan, 10);
+
+    if (isNaN(durasiInput) || isNaN(hargaAngka) || isNaN(kecepatanAngka)) {
+      Alert.alert('Error', 'Input durasi, harga, dan kecepatan harus berupa angka.');
+      return;
+    }
+
+    // Menyiapkan nilai durasi tanpa konversi paksa ke hari
+    const nilaiDurasiUntukDb = siapkanNilaiDurasi(durasiInput, unitDurasi);
+
+    // Jika unitnya Jam, unit yang disimpan di db adalah Hari
+    const unitUntukDb = unitDurasi === 'Jam' ? 'Hari' : unitDurasi;
+
+    try {
+      // PERUBAHAN: Sekarang kita juga mengirim 'unit_durasi'
+      await paketRepo.tambahPaket({
+        nama: nama.trim(),
+        durasi: nilaiDurasiUntukDb,
+        unit_durasi: unitUntukDb, // Kirim unitnya
+        harga: hargaAngka,
+        kecepatan: kecepatanAngka,
+      });
+
+      // Pesan sukses yang lebih umum
+      Alert.alert('Sukses', `Paket "${nama.trim()}" berhasil disimpan.`);
+      router.back();
+    } catch (error) {
+      console.error('Gagal menyimpan paket:', error);
+      Alert.alert('Error', 'Gagal menyimpan paket. Silakan coba lagi.');
+    }
+  };
+
+  return (
+    <SafeAreaViewCustom>
+      <HeaderCustom title='Form Paket' leftAccessory={<TombolKembali />} />
+
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.areaScroll}>
+        <InputTeks
+          label='Nama Paket'
+          placeholder='Masukkan nama paket'
+          value={nama}
+          onChangeText={setNama}
+          returnKeyType='next'
+          onSubmitEditing={() => refHarga.current?.focus()}
+        />
+        <InputTeks
+          ref={refHarga}
+          label='Harga'
+          placeholder='Contoh: 150.000'
+          keyboardType='numeric'
+          value={formatAngka(harga)}
+          onChangeText={handleHargaChange}
+          returnKeyType='next'
+          onSubmitEditing={() => refKecepatan.current?.focus()}
+        />
+        <InputTeks
+          ref={refKecepatan}
+          label='Kecepatan (Mbps)'
+          placeholder='Contoh: 10'
+          keyboardType='numeric'
+          value={kecepatan}
+          onChangeText={setKecepatan}
+          returnKeyType='next'
+          onSubmitEditing={() => refDurasi.current?.focus()}
+        />
+        <InputTeks
+          ref={refDurasi}
+          label={`Durasi (${unitDurasi})`}
+          placeholder='Contoh: 30'
+          keyboardType='numeric'
+          value={durasi}
+          onChangeText={setDurasi}
+          returnKeyType='done'
+          onSubmitEditing={handleSimpan}
+        />
+
+        <View style={styles.opsiContainer}>
+          <Pressable
+            style={[styles.opsiTombol, unitDurasi === 'Jam' && styles.opsiTombolAktif]}
+            onPress={() => setUnitDurasi('Jam')}
+          >
+            <Text style={[styles.opsiTeks, unitDurasi === 'Jam' && styles.opsiTeksAktif]}>Jam</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.opsiTombol, unitDurasi === 'Hari' && styles.opsiTombolAktif]}
+            onPress={() => setUnitDurasi('Hari')}
+          >
+            <Text style={[styles.opsiTeks, unitDurasi === 'Hari' && styles.opsiTeksAktif]}>
+              Hari
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.opsiTombol, unitDurasi === 'Bulan' && styles.opsiTombolAktif]}
+            onPress={() => setUnitDurasi('Bulan')}
+          >
+            <Text style={[styles.opsiTeks, unitDurasi === 'Bulan' && styles.opsiTeksAktif]}>
+              Bulan
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      <View style={styles.footerContainer}>
+        <TombolAksi title='Simpan Paket' onPress={handleSimpan} />
+      </View>
+    </SafeAreaViewCustom>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+  },
+  areaScroll: {
+    gap: 16,
+    padding: 16,
+  },
+  footerContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  opsiContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  opsiTombol: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  opsiTombolAktif: {
+    backgroundColor: '#007AFF',
+  },
+  opsiTeks: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  opsiTeksAktif: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+});
+```

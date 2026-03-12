@@ -1,6 +1,6 @@
 // Path: ~/wifi-v3/app/(tabs)/kategori.tsx
 
-import HeaderCustom from '@/components/header/header-custom';
+import HeaderBiasa from '@/components/header/header-biasa';
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import { TombolHapus, TombolTambah } from '@/components/tombol';
 import { Kategori, operasiKategori } from '@/database/operasi/kategori-operasi';
@@ -74,14 +74,10 @@ export default function HalamanKategori() {
 
   return (
     <SafeAreaViewCustom>
-      <HeaderCustom
-        title='Kategori'
-        rightAccessory={
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TombolHapus onPress={() => console.log('Hapus')} />
-          </View>
-        }
-      />
+      <HeaderBiasa>
+        <Text style={styles.headerTitle}>Kategori</Text>
+        <TombolHapus />
+      </HeaderBiasa>
 
       <View style={styles.wadahTombolTipe}>
         <Pressable
@@ -144,6 +140,7 @@ export default function HalamanKategori() {
 }
 
 const styles = StyleSheet.create({
+  headerTitle: { fontSize: 18, fontWeight: '600', textAlign: 'center' },
   wadahTombolTipe: {
     flexDirection: 'row',
     paddingHorizontal: 16,
