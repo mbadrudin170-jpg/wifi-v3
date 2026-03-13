@@ -62,3 +62,32 @@ export const formatRupiah = (angka: number | string | null | undefined): string 
     return 'Rp 0';
   }
 };
+
+/**
+ * Memformat angka menjadi format singkat (Rb, Jt, M).
+ * @param angka Angka yang akan diformat.
+ * @returns String dalam format singkat (misal: '1,5Jt').
+ */
+export const formatAngkaSingkat = (angka: number): string => {
+  if (isNaN(angka)) {
+    return '0';
+  }
+
+  // Handle angka negatif dengan memproses nilai absolutnya lalu menambahkan kembali tanda minus
+  const isNegatif = angka < 0;
+  const absAngka = Math.abs(angka);
+
+  let hasil: string;
+
+  if (absAngka >= 1_000_000_000) {
+    hasil = (absAngka / 1_000_000_000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + 'M';
+  } else if (absAngka >= 1_000_000) {
+    hasil = (absAngka / 1_000_000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + 'Jt';
+  } else if (absAngka >= 1_000) {
+    hasil = (absAngka / 1_000).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + 'Rb';
+  } else {
+    hasil = absAngka.toString();
+  }
+
+  return isNegatif ? `-${hasil}` : hasil;
+};

@@ -1,5 +1,6 @@
 ## Aturan untuk Aisten
 
+1. tolong baca dahulu file README.md.
 2. kalau ada error tolong jelaskan kenapa bisa terjadi error.
 3. selalu tambahkan jalur path di bagian paling atas dari sebuah isi file.
 4. selalu menjaga konsistensi dan standar penulisan kode.
@@ -9,3 +10,4 @@
 8. setiap saya memberikan pertanyaan tolong kamu baca dahulu file nya karena pasti ada perubahan yang telah saya lakukan jangan ambil dari memori kamu.
 9. cukup tunjukan kode yang harus saya perbaiki dan kode yang benar karena saya ingin sambil belajar.
 10. bantu saya agar bisa mahir dalam react expo.
+11. buatkan dokumentasi untuk semua file di proyek saya lalu susun beradsarkan foldernya dan tulis di file README.md.

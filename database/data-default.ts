@@ -74,10 +74,9 @@ export const insertDefaultData = async (db: SQLiteDatabase) => {
       "INSERT INTO sub_kategori (nama, kategori_id) VALUES ('Transportasi', ?)",
       operasional.id
     );
-
     // Dompet
-    await db.runAsync("INSERT INTO dompet (nama, saldo) VALUES ('Kas Usaha', 0)");
-    await db.runAsync("INSERT INTO dompet (nama, saldo) VALUES ('Bank', 0)");
+    await db.runAsync("INSERT INTO dompet (nama, saldo, tipe) VALUES ('Kas Usaha', 0, 'Utama')");
+    await db.runAsync("INSERT INTO dompet (nama, saldo, tipe) VALUES ('Bank', 0, 'Utama')");
 
     // PAKET WIFI
     console.log('Memasukkan data paket...');

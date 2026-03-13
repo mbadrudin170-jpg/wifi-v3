@@ -1,4 +1,4 @@
-// path: app/(tabs)/transaksi.tsx
+// Path: ~/wifi-v3/halaman/(tabs)/transaksi.tsx
 // File Screen untuk manajemen Transaksi WiFi dengan teks loading.
 
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
@@ -207,8 +207,8 @@ export default function TransaksiScreen() {
         </View>
       </View>
 
-      {isLoading && sections.length === 0 ? (
-        // TAMPILKAN INI SAAT LOADING AWAL
+      {isLoading ? (
+        // TAMPILKAN INI SAAT LOADING
         <View style={styles.centerLoader}>
           <Text style={styles.loadingText}>Memuat data transaksi...</Text>
         </View>

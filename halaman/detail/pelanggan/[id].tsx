@@ -1,4 +1,4 @@
-// Path: /home/user/wifi-v3/app/detail/pelanggan/[id].tsx
+// Path: /home/user/wifi-v3/halaman/detail/pelanggan/[id].tsx
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -14,18 +14,19 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// Mengimpor operasi database
+// Mengimpor operasi database (Koki)
 import { operasiPelanggan, Pelanggan } from '../../../database/operasi/pelanggan-operasi';
 
 export default function HalamanDetailPelanggan() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // Menangkap ID dari parameter URL
+  const { id } = useLocalSearchParams();
   const db = useSQLiteContext();
 
+  // Logic: State Management
   const [pelanggan, setPelanggan] = useState<Pelanggan | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Inisialisasi fungsi operasi database
+  // Logic: Inisialisasi operasi database (Koki)
   const pelangganDb = operasiPelanggan(db);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function HalamanDetailPelanggan() {
     const muatDetailPelanggan = async () => {
       try {
         if (!isCancelled) setLoading(true);
-        // Mengkonversi id string ke number sesuai kebutuhan SQLite
+        // Konversi id string ke number sesuai skema SQLite
         const data = await pelangganDb.ambilPelangganBerdasarkanId(Number(id));
         if (!isCancelled) setPelanggan(data);
       } catch (error) {
@@ -49,9 +50,9 @@ export default function HalamanDetailPelanggan() {
     return () => {
       isCancelled = true;
     };
-  }, [id, pelangganDb]);
+  }, [id]); // Disederhanakan agar tidak re-run jika fungsi koki stabil
 
-  // Fungsi untuk aksi cepat (Telepon & WA)
+  // Logic: Fungsi Aksi Cepat (Telepon & WA)
   const handleContact = (type: 'tel' | 'wa') => {
     if (!pelanggan?.no_hp) return;
     const cleanPhone = pelanggan.no_hp.replace(/[^0-9]/g, '');
@@ -59,21 +60,23 @@ export default function HalamanDetailPelanggan() {
     Linking.openURL(url);
   };
 
+  // UI: Loading State
   if (loading) {
     return (
       <View style={styles.centerLoader}>
         <ActivityIndicator size='large' color='#007AFF' />
-        <Text style={{ marginTop: 10, color: '#666' }}>Memuat data...</Text>
+        <Text style={styles.loaderText}>Memuat data...</Text>
       </View>
     );
   }
 
+  // UI: Empty/Error State
   if (!pelanggan) {
     return (
       <View style={styles.centerLoader}>
-        <Text style={{ color: '#FF5252', fontWeight: 'bold' }}>Pelanggan tidak ditemukan!</Text>
-        <Pressable onPress={() => router.back()} style={{ marginTop: 20 }}>
-          <Text style={{ color: '#007AFF' }}>Kembali</Text>
+        <Text style={styles.errorText}>Pelanggan tidak ditemukan!</Text>
+        <Pressable onPress={() => router.back()} style={styles.backLink}>
+          <Text style={styles.backLinkText}>Kembali</Text>
         </Pressable>
       </View>
     );
@@ -83,7 +86,7 @@ export default function HalamanDetailPelanggan() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Bagian Header */}
+      {/* UI: Section Header */}
       <View style={styles.header}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <MaterialIcons name='chevron-left' size={28} color={'#333'} />
@@ -95,7 +98,7 @@ export default function HalamanDetailPelanggan() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Kartu Profil Utama */}
+        {/* UI: Kartu Profil Utama */}
         <View style={styles.profileCard}>
           <View style={styles.avatarCircle}>
             <MaterialIcons name='person' size={50} color={'#FFFFFF'} />
@@ -106,10 +109,11 @@ export default function HalamanDetailPelanggan() {
           </View>
         </View>
 
-        {/* Informasi Detail */}
+        {/* UI: Informasi Detail */}
         <View style={styles.infoSection}>
           <Text style={styles.sectionTitle}>Informasi Kontak</Text>
 
+          {/* Baris Alamat */}
           <View style={styles.infoRow}>
             <View style={styles.iconWrapper}>
               <MaterialIcons name='place' size={20} color={'#666'} />
@@ -120,6 +124,7 @@ export default function HalamanDetailPelanggan() {
             </View>
           </View>
 
+          {/* Baris No HP */}
           <View style={styles.infoRow}>
             <View style={styles.iconWrapper}>
               <MaterialIcons name='phone' size={20} color={'#666'} />
@@ -131,19 +136,13 @@ export default function HalamanDetailPelanggan() {
           </View>
         </View>
 
-        {/* Tombol Aksi Cepat */}
+        {/* UI: Tombol Aksi Cepat */}
         <View style={styles.actionContainer}>
-          <Pressable
-            style={[styles.actionBtn, { backgroundColor: '#25D366' }]}
-            onPress={() => handleContact('wa')}
-          >
+          <Pressable style={[styles.actionBtn, styles.waBtn]} onPress={() => handleContact('wa')}>
             <MaterialIcons name='chat' size={20} color={'#fff'} />
             <Text style={styles.actionBtnText}>WhatsApp</Text>
           </Pressable>
-          <Pressable
-            style={[styles.actionBtn, { backgroundColor: '#007AFF' }]}
-            onPress={() => handleContact('tel')}
-          >
+          <Pressable style={[styles.actionBtn, styles.telBtn]} onPress={() => handleContact('tel')}>
             <MaterialIcons name='call' size={20} color={'#fff'} />
             <Text style={styles.actionBtnText}>Telepon</Text>
           </Pressable>
@@ -154,6 +153,7 @@ export default function HalamanDetailPelanggan() {
 }
 
 const styles = StyleSheet.create({
+  // 1. Kontainer Utama & Loader
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
@@ -163,6 +163,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loaderText: {
+    marginTop: 10,
+    color: '#666',
+  },
+  errorText: {
+    color: '#FF5252',
+    fontWeight: 'bold',
+  },
+  backLink: {
+    marginTop: 20,
+  },
+  backLinkText: {
+    color: '#007AFF',
+  },
+
+  // 2. Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -186,6 +202,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#EBF5FF',
     borderRadius: 10,
   },
+
+  // 3. Scroll Content & Profil
   scrollContent: {
     padding: 20,
   },
@@ -227,6 +245,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+
+  // 4. Seksi Informasi
   infoSection: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
@@ -271,6 +291,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     lineHeight: 22,
   },
+
+  // 5. Tombol Aksi
   actionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -284,6 +306,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
+  },
+  waBtn: {
+    backgroundColor: '#25D366',
+  },
+  telBtn: {
+    backgroundColor: '#007AFF',
   },
   actionBtnText: {
     color: '#FFFFFF',

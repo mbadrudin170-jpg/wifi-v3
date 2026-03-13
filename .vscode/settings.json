@@ -4,13 +4,13 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "files.autoSave": "afterDelay",
+  "files.autoSave": "onFocusChange",
   "editor.formatOnPaste": true,
   "editor.guides.indentation": true,
   "editor.guides.highlightActiveIndentation": true,
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
-  "files.autoSaveDelay": 1000,
+  // "files.autoSaveDelay": 1000,
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": "active",
   "[jsonc]": {

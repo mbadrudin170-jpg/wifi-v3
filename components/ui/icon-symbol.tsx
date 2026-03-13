@@ -11,6 +11,7 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.right': 'chevron-right',
   'rectangle.stack.fill': 'menu-book',
+  'wallet.pass.fill': 'account-balance-wallet', // TAMBAHAN BARU
 } as const;
 
 type IconSymbolName = keyof typeof MAPPING;

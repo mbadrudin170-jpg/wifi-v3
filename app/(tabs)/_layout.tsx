@@ -29,6 +29,13 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+        name='statistik'
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <IconSymbol name='house.fill' size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name='index'
         options={{
           title: 'Home',
@@ -54,6 +61,13 @@ export default function TabLayout() {
         options={{
           title: 'Transaksi',
           tabBarIcon: ({ color }) => <IconSymbol name='banknote.fill' size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name='dompet'
+        options={{
+          title: 'Dompet',
+          tabBarIcon: ({ color }) => <IconSymbol name='wallet.pass.fill' size={24} color={color} />,
         }}
       />
       <Tabs.Screen

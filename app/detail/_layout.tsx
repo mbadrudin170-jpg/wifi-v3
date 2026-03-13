@@ -41,23 +41,26 @@ export default function DetailLayout() {
           headerShown: false,
         }}
       />
-
       <Stack.Screen
         name='detail-paket/[id]'
         options={{
           title: 'Informasi Paket',
         }}
       />
-
       <Stack.Screen
-        name='pelanggan/[id]'
+        name='detail-pelanggan/[id]'
         options={{
           title: 'Profil Pelanggan',
         }}
       />
-
       <Stack.Screen
-        name='pelanggan-aktif/[id]'
+        name='detail-pelanggan-aktif/[id]'
+        options={{
+          title: 'Status Berlangganan',
+        }}
+      />{' '}
+      <Stack.Screen
+        name='detail-dompet/[id]'
         options={{
           title: 'Status Berlangganan',
         }}
