@@ -1,5 +1,4 @@
-// Path: /home/user/wifi-v3/halaman/detail/pelanggan-aktif/[id].tsx
-
+// Path: ~/wifi-v3/halaman/detail/pelanggan-aktif/detail-pelanggan-aktif-halaman.tsx
 import {
   operasiPelangganAktif,
   type PelangganAktifDetail,

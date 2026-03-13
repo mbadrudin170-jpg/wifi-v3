@@ -8,8 +8,7 @@ import { useStatistikKeuangan } from '@/hooks/transaksi/use-statistik-keuangan';
 import { formatAngkaSingkat, formatRupiah } from '@/utils/format/format-angka';
 import {
   ActivityIndicator,
-  Dimensions,
-  Platform, // Impor Platform untuk deteksi OS
+  Dimensions, // Impor Platform untuk deteksi OS
   ScrollView,
   StyleSheet,
   View,
@@ -81,32 +80,26 @@ export default function StatistikScreen() {
 
           <View style={styles.separator} />
 
-          <ThemedText style={styles.rataTitle}>Rata-Rata Pemasukan</ThemedText>
+          <ThemedText style={styles.sectionTitle}>Rata-Rata Pemasukan</ThemedText>
           {/* Rata-Rata Pemasukan */}
           <View style={styles.infoRow}>
             <ThemedText style={styles.infoLabel}>Per Hari</ThemedText>
-            <ThemedText style={[styles.infoValue, styles.pemasukanValue]}>
-              {formatRupiah(rataHarian)}
-            </ThemedText>
+            <ThemedText style={styles.infoValue}>{formatRupiah(rataHarian)}</ThemedText>
           </View>
 
           <View style={styles.infoRow}>
             <ThemedText style={styles.infoLabel}>Per Minggu</ThemedText>
-            <ThemedText style={[styles.infoValue, styles.pemasukanValue]}>
-              {formatRupiah(rataMingguan)}
-            </ThemedText>
+            <ThemedText style={styles.infoValue}>{formatRupiah(rataMingguan)}</ThemedText>
           </View>
 
           <View style={styles.infoRow}>
             <ThemedText style={styles.infoLabel}>Per Bulan</ThemedText>
-            <ThemedText style={[styles.infoValue, styles.pemasukanValue]}>
-              {formatRupiah(rataBulanan)}
-            </ThemedText>
+            <ThemedText style={styles.infoValue}>{formatRupiah(rataBulanan)}</ThemedText>
           </View>
 
           <View style={styles.separator} />
 
-          <ThemedText style={styles.rataTitle}>Rata-Rata Pengeluaran</ThemedText>
+          <ThemedText style={styles.sectionTitle}>Rata-Rata Pengeluaran</ThemedText>
 
           <View style={styles.infoRow}>
             <ThemedText style={styles.infoLabel}>Per Hari</ThemedText>
@@ -133,51 +126,45 @@ export default function StatistikScreen() {
     </ScrollView>
   );
 }
-
-// Konfigurasi tampilan untuk grafik
+// Konfigurasi tampilan untuk grafik LineChart
 const chartConfig = {
-  backgroundColor: '#ffffff',
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
+  backgroundColor: '#FFFFFF',
+  backgroundGradientFrom: '#FFFFFF',
+  backgroundGradientTo: '#FFFFFF',
   decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  // Mengubah warna garis dan label utama menjadi biru agar kontras
+  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`, 
+  // Mengubah warna label sumbu menjadi hitam agar terbaca
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`, 
   style: {
     borderRadius: 16,
   },
   propsForDots: {
     r: '4',
     strokeWidth: '2',
-    stroke: '#4ade80',
-  },
-  // Gunakan font monospace yang sesuai dengan platform
-  propsForLabels: {
-    fontFamily: Platform.select({
-      ios: 'Menlo',
-      android: 'monospace',
-      default: 'monospace',
-    }),
+    // Mengubah warna titik menjadi biru agar serasi
+    stroke: '#007AFF', 
   },
 };
 
+// Kumpulan gaya untuk halaman statistik dan komponennya
 const styles = StyleSheet.create({
-  // Container utama
+  // Gaya untuk container utama
   container: {
     flex: 1,
   },
   innerContainer: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 40, // Ruang ekstra di bawah
   },
-
-  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 10,
   },
 
-  // Header & Subheader
+  // Gaya untuk header
   header: {
     marginBottom: 4,
   },
@@ -187,46 +174,46 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
 
-  // Grafik
+  // Gaya untuk komponen Grafik Saldo
   chart: {
     marginVertical: 8,
     borderRadius: 16,
   },
 
-  // Kartu Ringkasan
+  // Gaya untuk Komponen Kartu Informasi Keuangan
   infoCard: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff', // Sedikit lebih cerah
     borderRadius: 12,
     padding: 16,
     marginTop: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 2.5,
+    elevation: 3,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+    color: '#222',
   },
-
-  // Judul bagian rata-rata
-  rataTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginTop: 16,
     marginBottom: 8,
     color: '#333',
   },
-
-  // Baris info
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
   infoLabel: {
     fontSize: 14,
@@ -237,22 +224,14 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#111',
   },
-
-  // Nilai khusus
   saldoValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#16a34a',
-  },
-  pemasukanValue: {
-    color: '#16a34a', // hijau
-    fontWeight: '600',
+    color: '#16a34a', // Hijau untuk saldo positif
   },
   pengeluaranValue: {
-    color: '#dc2626',
+    color: '#dc2626', // Merah untuk pengeluaran
   },
-
-  // Separator
   separator: {
     height: 1,
     backgroundColor: '#e5e5e5',

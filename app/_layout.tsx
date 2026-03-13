@@ -7,8 +7,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Suspense, useMemo } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
+import Toast from 'react-native-toast-message'; // Import Toast
 
-import { Colors } from '@/constants/theme'; // Pastikan import Colors
+import { Colors } from '@/constants/theme';
 import { insertDefaultData } from '@/database/data-default';
 import { migrateDbIfNeeded } from '@/database/sqlite';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -23,7 +24,6 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  // Memasukkan skema warna kustom kita ke dalam navigasi
   const customTheme = useMemo(() => {
     const isDark = colorScheme === 'dark';
     const themeBase = isDark ? DarkTheme : DefaultTheme;
@@ -55,23 +55,19 @@ export default function RootLayout() {
   };
 
   return (
-    // Menggunakan customTheme hasil racikan kita sendiri
     <ThemeProvider value={customTheme}>
       <Suspense fallback={<LoadingView />}>
         <SQLiteProvider databaseName='main.db' onInit={handleInitDatabase} useSuspense>
-          <Stack>
-            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
-            <Stack.Screen name='detail' options={{ headerShown: false }} />
-            <Stack.Screen
-              name='form'
-              options={{
-                headerShown: false,
-              }}
-            />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name='(tabs)' />
+            <Stack.Screen name='detail' />
+            <Stack.Screen name='form' />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
         </SQLiteProvider>
       </Suspense>
+      {/* Tambahkan Toast di sini untuk ketersediaan global */}
+      <Toast />
     </ThemeProvider>
   );
 }

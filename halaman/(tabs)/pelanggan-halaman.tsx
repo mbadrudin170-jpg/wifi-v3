@@ -1,11 +1,19 @@
 // Path: ~/wifi-v3/halaman/(tabs)/pelanggan.tsx
 
-import { TombolTambah } from '@/components/tombol';
+import { TombolHapus, TombolTambah } from '@/components/tombol';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { operasiPelanggan, Pelanggan } from '../../database/operasi/pelanggan-operasi';
 
@@ -46,8 +54,40 @@ export default function HalamanPelanggan() {
     }, [muatDataPelanggan])
   );
 
+  const handleHapusSemua = useCallback(() => {
+    if (daftarPelanggan.length === 0) {
+      Alert.alert('Informasi', 'Tidak ada data pelanggan untuk dihapus.');
+      return;
+    }
+    Alert.alert('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus semua data pelanggan?', [
+      {
+        text: 'Batal',
+        style: 'cancel',
+      },
+      {
+        text: 'Hapus Semua',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setLoading(true);
+            await pelangganDb.hapusSemuaPelanggan();
+            await muatDataPelanggan(); // Muat ulang data setelah hapus
+            Alert.alert('Berhasil', 'Semua data pelanggan telah dihapus.');
+          } catch (error) {
+            console.error('Gagal menghapus semua pelanggan:', error);
+            Alert.alert('Error', 'Terjadi kesalahan saat menghapus data pelanggan.');
+            if (isMountedRef.current) setLoading(false); // Matikan loading jika gagal
+          }
+        },
+      },
+    ]);
+  }, [pelangganDb, daftarPelanggan.length, muatDataPelanggan]);
+
   const renderItemPelanggan = ({ item }: { item: Pelanggan }) => (
-    <Pressable style={styles.card} onPress={() => router.push(`/detail/pelanggan/${item.id}`)}>
+    <Pressable
+      style={styles.card}
+      onPress={() => router.push(`/detail/detail-pelanggan/${item.id}`)}
+    >
       <View style={styles.cardInfo}>
         <Text style={styles.namaText}>{item.nama}</Text>
         <Text style={styles.alamatText}>{item.alamat}</Text>
@@ -67,7 +107,9 @@ export default function HalamanPelanggan() {
         <View style={styles.headerTextWrapper}>
           <Text style={styles.headerTitle}>Daftar Pelanggan</Text>
           <Text style={styles.headerSubtitle}>
-            {loading ? 'Mengambil data...' : `${daftarPelanggan.length} Total Pelanggan`}
+            {loading && daftarPelanggan.length === 0
+              ? 'Mengambil data...'
+              : `${daftarPelanggan.length} Total Pelanggan`}
           </Text>
         </View>
 
@@ -81,6 +123,7 @@ export default function HalamanPelanggan() {
           >
             <MaterialIcons name='refresh' size={24} color={'#333'} />
           </Pressable>
+          <TombolHapus onPress={handleHapusSemua} />
         </View>
       </View>
 

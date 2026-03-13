@@ -2,7 +2,7 @@
 // Penjelasan: File ini berfungsi sebagai rute dinamis untuk menampilkan halaman detail dompet.
 // URL seperti /detail/detail-dompet/xyz akan ditangani oleh file ini.
 
-import HalamanDetailDompet from '@/halaman/detail/detial-dompet-halaman';
+import HalamanDetailDompet from '@/halaman/detail/detail-dompet-halaman';
 
 export default function DetailDompetScreen() {
   return <HalamanDetailDompet />;

@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Mengimpor operasi database (Koki)
-import { operasiPelanggan, Pelanggan } from '../../../database/operasi/pelanggan-operasi';
+import { operasiPelanggan, Pelanggan } from '../../database/operasi/pelanggan-operasi';
 
 export default function HalamanDetailPelanggan() {
   const router = useRouter();
@@ -100,9 +100,6 @@ export default function HalamanDetailPelanggan() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* UI: Kartu Profil Utama */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarCircle}>
-            <MaterialIcons name='person' size={50} color={'#FFFFFF'} />
-          </View>
           <Text style={styles.namaText}>{pelanggan.nama}</Text>
           <View style={styles.statusBadge}>
             <Text style={styles.statusText}>Pelanggan Terdaftar</Text>

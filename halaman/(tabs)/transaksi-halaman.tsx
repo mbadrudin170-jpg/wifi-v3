@@ -1,4 +1,4 @@
-// Path: ~/wifi-v3/halaman/(tabs)/transaksi.tsx
+// Path: ~/wifi-v3/halaman/(tabs)/transaksi-halaman.tsx
 // File Screen untuk manajemen Transaksi WiFi dengan teks loading.
 
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
@@ -13,7 +13,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 
-export default function TransaksiScreen() {
+export default function HalamanTransaksi() {
   const router = useRouter();
   const db = useSQLiteContext();
   const [sections, setSections] = useState<SectionData[]>([]);
@@ -147,13 +147,13 @@ export default function TransaksiScreen() {
       }
     >
       <View style={styles.wadahKiri}>
-        <Text>{item.nama_kategori}</Text>
-        <Text>{item.nama_sub_kategori}</Text>
+        <Text>{item.nama_kategori || '-'}</Text>
+        <Text>{item.nama_sub_kategori || '-'}</Text>
       </View>
 
       <View style={styles.wadahTengah}>
-        <Text>{item.deskripsi}</Text>
-        <Text>{item.nama_dompet}</Text>
+        <Text>{item.deskripsi || '-'}</Text>
+        <Text>{item.nama_dompet || '-'}</Text>
       </View>
       <View style={styles.wadahKanan}>
         <Text
@@ -164,7 +164,7 @@ export default function TransaksiScreen() {
         >
           {formatRupiah(item.jumlah || 0)}
         </Text>
-        <Text style={styles.jam}>{item.jam}</Text>
+        <Text style={styles.jam}>{item.jam || '-'}</Text>
       </View>
     </Pressable>
   );
@@ -207,8 +207,8 @@ export default function TransaksiScreen() {
         </View>
       </View>
 
-      {isLoading ? (
-        // TAMPILKAN INI SAAT LOADING
+      {isLoading && sections.length === 0 ? (
+        // Tampilkan loader hanya pada muatan awal saat data belum ada
         <View style={styles.centerLoader}>
           <Text style={styles.loadingText}>Memuat data transaksi...</Text>
         </View>
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
   // Card Item
   card: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
     marginBottom: 12,
     elevation: 3,
     shadowColor: '#000',
@@ -406,17 +406,18 @@ const styles = StyleSheet.create({
 
   // Card Layout Sections
   wadahKiri: {
+    width: '33%',
     justifyContent: 'flex-start',
-    marginBottom: 10,
     alignItems: 'center',
   },
   wadahTengah: {
+    width: '33%',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingVertical: 8,
   },
   wadahKanan: {
-    justifyContent: 'flex-start',
+    width: '33%',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
 

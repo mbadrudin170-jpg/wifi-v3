@@ -15,7 +15,7 @@ export default function HalamanDompet() {
   const [dataDompet, setDataDompet] = useState<Dompet[]>([]);
 
   const muatData = useCallback(async () => {
-    const data = await operasiDompet(db).getAll();
+    const data = await operasiDompet(db).ambilSemuaDompet();
     setDataDompet(data);
   }, [db]);
 

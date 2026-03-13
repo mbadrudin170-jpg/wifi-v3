@@ -47,8 +47,17 @@ export const operasiPelanggan = (db: SQLite.SQLiteDatabase) => ({
     );
   },
 
-  // HAPUS
+  // HAPUS BERDASARKAN ID
   async hapusPelanggan(id: number): Promise<SQLite.SQLiteRunResult> {
     return await db.runAsync('DELETE FROM pelanggan WHERE id = ?', id);
+  },
+
+  /**
+   * Menghapus semua data dari tabel pelanggan.
+   * @returns Promise yang resolve ketika operasi selesai.
+   */
+  async hapusSemuaPelanggan(): Promise<SQLite.SQLiteRunResult> {
+    console.log('[DB Operation] Menghapus semua pelanggan.');
+    return await db.runAsync('DELETE FROM pelanggan');
   },
 });

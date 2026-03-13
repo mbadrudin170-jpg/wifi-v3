@@ -1,4 +1,5 @@
-// Path: ~/wifi-v3/app/form/form-transaksi.tsx
+// Path: ~/wifi-v3/halaman/form/form-transaksi.tsx
+
 import HeaderCustom from '@/components/header/header-custom';
 import ModalDropDown from '@/components/modal/modal';
 import { TombolKembali, TombolSimpan } from '@/components/tombol';
@@ -103,7 +104,7 @@ export default function FormTransaksi() {
       };
 
       // Selalu muat daftar dompet untuk pilihan dropdown
-      operasiDompet(db).getAll().then(setDompetList);
+      operasiDompet(db).ambilSemuaDompet().then(setDompetList);
 
       if (idParam) {
         // Jika ada 'id' dari URL, jalankan fungsi muat data
@@ -160,13 +161,36 @@ export default function FormTransaksi() {
     const rawValue = text.replace(/[^0-9]/g, '');
     setJumlah(rawValue);
   };
+  // Path: ~/wifi-v3/halaman/form/form-transaksi.tsx
+
+  // ... (kode lainnya)
 
   const handleSimpan = async () => {
     const isTransfer = jenisTransaksi === 'transfer';
     const jumlahAngka = parseFloat(jumlah);
 
-    // ... Validasi input Anda tetap sama ...
-    // (kode validasi tidak perlu diubah)
+    // [!code focus:18]
+    // --- VALIDASI INPUT ---
+    if (!keterangan.trim()) {
+      Alert.alert('Peringatan', 'Keterangan transaksi tidak boleh kosong.');
+      return;
+    }
+    if (!jumlah || isNaN(jumlahAngka) || jumlahAngka <= 0) {
+      Alert.alert('Peringatan', 'Jumlah harus diisi dengan angka yang valid.');
+      return;
+    }
+    if (!selectedDompetAsal) {
+      Alert.alert('Peringatan', `Harap pilih ${isTransfer ? 'dompet asal' : 'dompet'}.`);
+      return;
+    }
+    if (isTransfer && !selectedDompetTujuan) {
+      Alert.alert('Peringatan', 'Harap pilih dompet tujuan untuk transfer.');
+      return;
+    }
+    if (!isTransfer && !selectedKategori) {
+      Alert.alert('Peringatan', 'Harap pilih kategori transaksi.');
+      return;
+    }
 
     try {
       const tanggalISO = date.toISOString();

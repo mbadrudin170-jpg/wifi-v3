@@ -15,7 +15,7 @@ export interface Dompet {
 }
 
 export const operasiDompet = (db: SQLite.SQLiteDatabase) => ({
-  async getAll() {
+  async ambilSemuaDompet() {
     return await db.getAllAsync<Dompet>('SELECT * FROM dompet ORDER BY nama ASC');
   },
   async getById(id: number) {

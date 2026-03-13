@@ -91,6 +91,21 @@ export const operasiTransaksi = (db: SQLiteDatabase) => ({
     }
   },
 
+  async getAllByDompetId(dompetId: number): Promise<Transaksi[]> {
+    const query = `
+      SELECT * 
+      FROM transaksi 
+      WHERE id_dompet = ? 
+      ORDER BY tanggal DESC, id DESC;
+    `;
+    try {
+      return await db.getAllAsync<Transaksi>(query, [dompetId]);
+    } catch (error) {
+      console.error(`Gagal mengambil transaksi untuk dompet id: ${dompetId}`, error);
+      throw error;
+    }
+  },
+
   async ambilSemuaLengkap(limit?: number): Promise<TransaksiLengkap[]> {
     const query = `
       SELECT
@@ -210,4 +225,3 @@ export const operasiTransaksi = (db: SQLiteDatabase) => ({
     }
   },
 });
-('');

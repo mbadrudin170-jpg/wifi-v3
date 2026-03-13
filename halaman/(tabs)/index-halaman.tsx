@@ -1,4 +1,4 @@
-// Path: ~/wifi-v3/halaman/(tabs)/index.tsx
+// Path: ~/wifi-v3/halaman/(tabs)/index-halaman.tsx
 
 import HeaderCustom from '@/components/header/header-custom';
 import { TombolTambah } from '@/components/tombol';
@@ -11,11 +11,12 @@ import {
 import { getStatusPelanggan } from '@/hooks/status-pelanggan';
 import { formatTanggalAngka } from '@/utils/format/format-tanggal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -94,10 +95,11 @@ export default function HalamanHome() {
     }
   }, [db]);
 
-  useEffect(() => {
-    muatData();
-  }, [muatData]);
-
+  useFocusEffect(
+    useCallback(() => {
+      muatData();
+    }, [muatData])
+  );
   // Logic: Fitur Pengurutan
   const handleUrutkan = (tipe: TipeUrut) => {
     const daftarUrut = [...pelangganList];
@@ -125,11 +127,33 @@ export default function HalamanHome() {
     tutupModalUrutkan();
   };
 
+  const handleHapusSemuaPelanggan = () => {
+    Alert.alert('Hapus Semua', 'Apakah Anda yakin ingin menghapus semua pelanggan aktif?', [
+      { text: 'Batal', style: 'cancel' },
+      {
+        text: 'Hapus',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const operasi = operasiPelangganAktif(db);
+            await operasi.hapusSemuaPelangganAktif();
+            await muatData();
+          } catch (error) {
+            console.error('Gagal menghapus pelanggan:', error);
+          }
+        },
+      },
+    ]);
+  };
+
   const bukaModalUrutkan = () => setSortModalVisible(true);
   const tutupModalUrutkan = () => setSortModalVisible(false);
 
-  const handleNavigasiNavigasi = (id: number) => {
-    router.push(`/detail/pelanggan-aktif/${id}`);
+  const handleDetailPelangganAktif = (id: number) => {
+    router.push({
+      pathname: '/detail/detail-pelanggan-aktif/[id]',
+      params: { id: id.toString() },
+    });
   };
 
   return (
@@ -139,7 +163,7 @@ export default function HalamanHome() {
         rightAccessory={
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TombolUrutkan onPress={bukaModalUrutkan} />
-            <TombolHapus />
+            <TombolHapus onPress={handleHapusSemuaPelanggan} />
           </View>
         }
       >
@@ -150,7 +174,7 @@ export default function HalamanHome() {
       </HeaderCustom>
 
       {/* UI: Section Content List */}
-      {loading ? (
+      {loading && pelangganList.length === 0 ? (
         <View style={Styles.emptyContainer}>
           <ActivityIndicator size='large' color='#2E7D32' />
           <Text>Mengambil Data Pelanggan...</Text>
@@ -159,7 +183,7 @@ export default function HalamanHome() {
         <FlatList
           data={pelangganList}
           renderItem={({ item }) => (
-            <RenderItemPelanggan item={item} onNavigate={handleNavigasiNavigasi} />
+            <RenderItemPelanggan item={item} onNavigate={handleDetailPelangganAktif} />
           )}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={Styles.listContentContainer}

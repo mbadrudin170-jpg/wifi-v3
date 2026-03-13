@@ -93,6 +93,24 @@ export const operasiPelangganAktif = (db: SQLiteDatabase) => ({
     await db.runAsync(query, pelanggan_id, paket_id, tanggal_mulai, tanggal_berakhir);
   },
 
+  async hapusSemuaPelangganAktif(): Promise<void> {
+    const before = await db.getFirstAsync<{ total: number }>(
+      `SELECT COUNT(*) as total FROM pelanggan_aktif`
+    );
+
+    console.log('Jumlah sebelum delete:', before?.total);
+
+    const result = await db.runAsync(`DELETE FROM pelanggan_aktif`);
+
+    console.log('Result:', result);
+
+    const after = await db.getFirstAsync<{ total: number }>(
+      `SELECT COUNT(*) as total FROM pelanggan_aktif`
+    );
+
+    console.log('Jumlah sesudah delete:', after?.total);
+  },
+
   async hitungTotalPelangganAktif(): Promise<number> {
     // ================== PERBAIKAN DI SINI ==================
     // Query ini tidak lagi mencari kolom 'status', tapi menghitung berdasarkan tanggal.

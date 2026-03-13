@@ -42,11 +42,19 @@ export const operasiPaket = (db: SQLiteDatabase) => ({
   async tambahPaket(data: Omit<Paket, 'id'>): Promise<void> {
     // PERUBAHAN: Mengekstrak 'unit_durasi' dari data
     const { nama, harga, durasi, unit_durasi, kecepatan } = data;
-    
+
     // PERUBAHAN: Menambahkan kolom dan nilai 'unit_durasi' ke query INSERT
     const query = `INSERT INTO paket (nama, harga, durasi, unit_durasi, kecepatan) VALUES (?, ?, ?, ?, ?);`;
-    
+
     // PERUBAHAN: Menambahkan 'unit_durasi' ke dalam array parameter
     await db.runAsync(query, [nama, harga, durasi, unit_durasi, kecepatan]);
+  },
+  async hapusBerdasarkanId(id: number): Promise<void> {
+    const query = `DELETE FROM paket WHERE id = ?;`;
+    await db.runAsync(query, [id]);
+  },
+  async hapusSemua(): Promise<void> {
+    const query = `DELETE FROM paket;`;
+    await db.runAsync(query);
   },
 });

@@ -10,4 +10,5 @@
 8. setiap saya memberikan pertanyaan tolong kamu baca dahulu file nya karena pasti ada perubahan yang telah saya lakukan jangan ambil dari memori kamu.
 9. cukup tunjukan kode yang harus saya perbaiki dan kode yang benar karena saya ingin sambil belajar.
 10. bantu saya agar bisa mahir dalam react expo.
-11. buatkan dokumentasi untuk semua file di proyek saya lalu susun beradsarkan foldernya dan tulis di file README.md.
+11. setelah melakukan perbaikan tolong buatkan dokumentasi lengkap untuk menjelaskan fitur apa saja yang ada di file nya dan fungsi apa saja yang ada di file nya pada semua projek saya dan tuliskan dokuemnnya per file di file README,md,
+12. untuk menginstall librari gunakan npx expo install.

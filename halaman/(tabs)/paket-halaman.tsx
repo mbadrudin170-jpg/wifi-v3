@@ -1,4 +1,4 @@
-// Path: /home/user/wifi-v3/halaman/(tabs)/paket.tsx
+// Path: ~/wifi-v3/halaman/(tabs)/paket-halaman.tsx
 
 import SafeAreaViewCustom from '@/components/komponen-react/safe-area-view-custom';
 import TombolTambah from '@/components/tombol/tombol-tambah';
@@ -7,8 +7,15 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 // UI: RenderItem Paket (Diletakkan di luar untuk performa RAM yang lebih stabil)
 const RenderItemPaket = ({
@@ -83,6 +90,33 @@ export default function HalamanPaket() {
     router.push(`/detail/detail-paket/${id}`);
   };
 
+  const handleHapusSemua = () => {
+    if (totalPaket === 0) {
+      Alert.alert('Informasi', 'Tidak ada paket untuk dihapus.');
+      return;
+    }
+    Alert.alert('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus semua paket?', [
+      {
+        text: 'Batal',
+        style: 'cancel',
+      },
+      {
+        text: 'Hapus Semua',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await operasiPaket(db).hapusSemua();
+            muatData(); // Refresh data
+            Alert.alert('Berhasil', 'Semua paket berhasil dihapus.');
+          } catch (error) {
+            console.error('Gagal menghapus semua paket:', error);
+            Alert.alert('Gagal', 'Terjadi kesalahan saat menghapus semua paket.');
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaViewCustom>
       {/* UI: Section Header */}
@@ -95,7 +129,7 @@ export default function HalamanPaket() {
           <Pressable style={styles.iconBtn} onPress={muatData}>
             <MaterialIcons name='refresh' size={24} color='#1976D2' />
           </Pressable>
-          <Pressable style={[styles.iconBtn, styles.btnDelete]}>
+          <Pressable style={[styles.iconBtn, styles.btnDelete]} onPress={handleHapusSemua}>
             <MaterialIcons name='delete-outline' size={24} color='#D32F2F' />
           </Pressable>
         </View>
